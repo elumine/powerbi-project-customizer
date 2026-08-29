@@ -1,0 +1,41 @@
+QWidget {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    font-family: "Segoe UI";
+    font-size: 10pt;
+}
+
+QFileDialog,
+QMessageBox {
+    background-color: #252526;
+    color: #d4d4d4;
+}
+
+QLineEdit,
+QPlainTextEdit,
+QTextEdit,
+QListView,
+QTreeView {
+    background-color: #1e1e1e;
+    border: 1px solid #3c3c3c;
+    color: #d4d4d4;
+    selection-background-color: #264f78;
+}
+
+QPushButton {
+    background-color: #0e639c;
+    border: 1px solid #1177bb;
+    border-radius: 3px;
+    color: #ffffff;
+    padding: 6px 10px;
+}
+
+QPushButton:hover {
+    background-color: #1177bb;
+}
+
+QPushButton:disabled {
+    background-color: #3c3c3c;
+    border-color: #3c3c3c;
+    color: #858585;
+}
