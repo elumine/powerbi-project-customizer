@@ -1,4 +1,4 @@
-﻿# JSON Multi Editor
+# JSON Multi Editor
 
 Desktop JSON multi-file editor built with Python, PySide6, QML, and Qt styling.
 
@@ -11,8 +11,11 @@ Desktop JSON multi-file editor built with Python, PySide6, QML, and Qt styling.
 - Search and replace across JSON text, including both keys and values.
 - Click search result previews to open the matching file accordion and scroll to the matched line.
 - Navigate matches inside the file editor with a compact search widget and active match count.
-- Create, edit, delete, persist, apply, and deactivate JSON content filters.
+- Import read-only content filters from `content/filters` and keep user-created filters persisted separately.
+- Create, edit, delete, persist, apply, and deactivate user JSON content filters.
 - Match filters recursively by key with `equals`, `includes`, `notEquals`, and `notIncludes` operations.
+- View duplicate JSON key/value suggestions from loaded valid JSON files and open search from a suggestion.
+- Import and run ordered macros from `content/macros` for filter, search, and search-and-replace workflows.
 - Keep invalid JSON visible in the explorer while excluding it from active filtered editing/search.
 - Limit search, replace-all, and single-file replace to active files while a content filter is applied.
 - Save one file or all dirty files.

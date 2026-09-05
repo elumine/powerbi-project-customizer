@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import random
@@ -21,6 +21,16 @@ FILTER_COLORS = (
 )
 
 
+def filter_value_to_text(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, (dict, list)):
+        return json.dumps(value, ensure_ascii=False, sort_keys=True)
+    return str(value)
+
+
 @dataclass(slots=True)
 class FilterRule:
     id: str
@@ -41,7 +51,7 @@ class FilterRule:
             id=str(data.get("id") or uuid.uuid4()),
             key=str(data.get("key", "")),
             operation=operation,
-            value=str(data.get("value", "")),
+            value=filter_value_to_text(data.get("value", "")),
         )
 
     def to_dict(self) -> dict[str, str]:
@@ -59,6 +69,8 @@ class ContentFilter:
     display_name: str
     color: str
     rules: list[FilterRule] = field(default_factory=list)
+    source_path: str = ""
+    is_read_only: bool = False
 
     @classmethod
     def create(
@@ -83,6 +95,8 @@ class ContentFilter:
             display_name=str(data.get("displayName", "")).strip(),
             color=str(data.get("color") or generate_filter_color(set())),
             rules=rules,
+            source_path=str(data.get("sourcePath", "")),
+            is_read_only=bool(data.get("isReadOnly", False)),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -92,27 +106,6 @@ class ContentFilter:
             "color": self.color,
             "rules": [rule.to_dict() for rule in self.rules],
         }
-
-
-def create_default_filters(used_colors: set[str] | None = None) -> list[ContentFilter]:
-    used = set(used_colors or set())
-    table_color = generate_filter_color(used)
-    used.add(table_color)
-    chart_color = generate_filter_color(used)
-    return [
-        ContentFilter.create(
-            "Table",
-            [FilterRule.create("visualType", "equals", "table")],
-            color=table_color,
-            used_colors=used,
-        ),
-        ContentFilter.create(
-            "Chart",
-            [FilterRule.create("visualType", "includes", "chart")],
-            color=chart_color,
-            used_colors=used | {chart_color},
-        ),
-    ]
 
 
 def generate_filter_color(used_colors: set[str]) -> str:
@@ -188,26 +181,17 @@ class FilterStorage:
 
     def load(self) -> list[ContentFilter]:
         if not self._path.exists():
-            filters = create_default_filters()
-            self.save(filters)
-            return filters
+            return []
 
         try:
             data = json.loads(self._path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
-            filters = create_default_filters()
-            self.save(filters)
-            return filters
+            return []
 
         saved_filters = data.get("filters", []) if isinstance(data, dict) else []
-        filters = [ContentFilter.from_dict(item) for item in saved_filters if isinstance(item, dict)]
-        if not filters:
-            filters = create_default_filters()
-            self.save(filters)
-        return filters
+        return [ContentFilter.from_dict(item) for item in saved_filters if isinstance(item, dict)]
 
     def save(self, filters: list[ContentFilter]) -> None:
         self._path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"filters": [content_filter.to_dict() for content_filter in filters]}
+        payload = {"filters": [content_filter.to_dict() for content_filter in filters if not content_filter.is_read_only]}
         self._path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-

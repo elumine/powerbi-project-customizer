@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import os
@@ -63,11 +63,15 @@ def destroy_qml(app: QApplication, engine: QQmlApplicationEngine) -> None:
 def run_smoke_test(args: list[str]) -> int:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
     previous_filter_path = os.environ.get("JSON_MULTI_EDITOR_FILTERS_PATH")
+    previous_content_path = os.environ.get("JSON_MULTI_EDITOR_CONTENT_PATH")
 
     with tempfile.TemporaryDirectory(prefix="json_multi_editor_") as temp_dir:
         root = Path(temp_dir)
         filter_path = root / "config" / "filters.json"
+        content_root = root / "content"
+        _write_smoke_content(content_root)
         os.environ["JSON_MULTI_EDITOR_FILTERS_PATH"] = str(filter_path)
+        os.environ["JSON_MULTI_EDITOR_CONTENT_PATH"] = str(content_root)
 
         app, engine, controller, _syntax_bridge = create_app(args)
         if not engine.rootObjects():
@@ -76,9 +80,19 @@ def run_smoke_test(args: list[str]) -> int:
 
         try:
             filters = controller.get_filters_model().filters()
-            default_filter_names = {content_filter.display_name for content_filter in filters}
-            assert {"Table", "Chart"}.issubset(default_filter_names), "Default filters were not created"
-            assert filter_path.exists(), "Default filters should be persisted on first run"
+            default_filter_names = {content_filter.display_name for content_filter in filters if content_filter.is_read_only}
+            assert {"Smoke Table", "Smoke Chart"}.issubset(default_filter_names), "Smoke filters should load from content JSON files"
+            assert not filter_path.exists(), "Imported filters should not be persisted as user filter copies"
+            chart_filter_index = next(
+                index for index, content_filter in enumerate(filters) if content_filter.display_name == "Smoke Chart"
+            )
+            assert not controller.openEditFilterEditor(chart_filter_index), "Imported filters should be read-only"
+
+            macros = controller.get_macro_model().items()
+            macro_names = {macro.name for macro in macros}
+            assert {"Find Target Key", "Apply Smoke Table Filter"}.issubset(macro_names), "Imported macros were not loaded"
+            invalid_macro = next(macro for macro in macros if macro.name == "Missing Filter Macro")
+            assert invalid_macro.validation_errors, "Invalid macros should display validation errors"
 
             visual_table = root / "theme-a" / "visual.json"
             visual_chart = root / "nested" / "theme-b" / "visual.json"
@@ -117,12 +131,40 @@ def run_smoke_test(args: list[str]) -> int:
             assert controller.get_active_file_count() == 3, "All files should be active before applying a filter"
             app.processEvents()
 
+            key_suggestions = controller.get_suggestion_key_model().items()
+            visual_type_index = next(
+                index for index, suggestion in enumerate(key_suggestions) if suggestion.duplication_value == "visualType"
+            )
+            visual_type_suggestion = key_suggestions[visual_type_index]
+            assert visual_type_suggestion.duplication_count == 2, "Suggestions should ignore invalid JSON files"
+            value_suggestion = next(
+                suggestion for suggestion in controller.get_suggestion_value_model().items() if suggestion.duplication_value == "red"
+            )
+            assert value_suggestion.duplication_count == 3, "Primitive duplicate values should be counted"
+            assert controller.openSuggestionSearch("key", visual_type_index), "Suggestion search should open from duplicate text"
+            assert controller.get_search_text() == "visualType", "Suggestion search should set the search input"
+            assert controller.get_total_matches() == 3, "Suggestion-triggered search should use active-file search behavior"
+
+            find_macro_index = next(index for index, macro in enumerate(controller.get_macro_model().items()) if macro.name == "Find Target Key")
+            assert controller.runMacro(find_macro_index), "Valid search macro should start"
+            _process_macro_events(app, controller)
+            assert controller.get_search_text() == "targetKey", "Search macro should set the search value"
+            assert controller.get_total_matches() == 3, "Search macro should run against active files"
+
+            apply_table_macro_index = next(index for index, macro in enumerate(controller.get_macro_model().items()) if macro.name == "Apply Smoke Table Filter")
+            assert controller.runMacro(apply_table_macro_index), "Valid filter macro should start"
+            _process_macro_events(app, controller)
+            assert controller.get_active_filter_name() == "Smoke Table", "Filter macro should apply the named smoke filter"
+            assert controller.get_active_file_count() == 1, "Table macro should activate only table visuals"
+            controller.deactivateFilter()
+            app.processEvents()
+
             documents = list(controller.get_file_model().documents())
             display_names = {document.name for document in documents}
             assert {"Table View", "Chart View"}.issubset(display_names), "Display names should come from JSON content"
             assert any(not document.is_valid_json for document in documents), "Invalid JSON fixture should stay loaded"
             chart_filter_index = next(
-                index for index, content_filter in enumerate(controller.get_filters_model().filters()) if content_filter.display_name == "Chart"
+                index for index, content_filter in enumerate(controller.get_filters_model().filters()) if content_filter.display_name == "Smoke Chart"
             )
             controller.applyFilter(chart_filter_index)
             app.processEvents()
@@ -141,7 +183,7 @@ def run_smoke_test(args: list[str]) -> int:
             assert "background-color" in first_document.highlighted_html, "Highlighted HTML was not generated"
 
             table_filter_index = next(
-                index for index, content_filter in enumerate(controller.get_filters_model().filters()) if content_filter.display_name == "Table"
+                index for index, content_filter in enumerate(controller.get_filters_model().filters()) if content_filter.display_name == "Smoke Table"
             )
             controller.applyFilter(table_filter_index)
             app.processEvents()
@@ -193,6 +235,7 @@ def run_smoke_test(args: list[str]) -> int:
             new_filter = next(content_filter for content_filter in saved_filters if content_filter.display_name == "Blue Target")
             persisted = json.loads(filter_path.read_text(encoding="utf-8"))
             assert any(item["id"] == new_filter.id for item in persisted["filters"]), "New filter should be persisted"
+            assert all(item["id"] not in {"smoke.filter.table", "smoke.filter.chart"} for item in persisted["filters"]), "Imported filters should not be persisted"
 
             new_filter_index = next(index for index, content_filter in enumerate(saved_filters) if content_filter.id == new_filter.id)
             controller.applyFilter(new_filter_index)
@@ -220,9 +263,84 @@ def run_smoke_test(args: list[str]) -> int:
                 os.environ.pop("JSON_MULTI_EDITOR_FILTERS_PATH", None)
             else:
                 os.environ["JSON_MULTI_EDITOR_FILTERS_PATH"] = previous_filter_path
+            if previous_content_path is None:
+                os.environ.pop("JSON_MULTI_EDITOR_CONTENT_PATH", None)
+            else:
+                os.environ["JSON_MULTI_EDITOR_CONTENT_PATH"] = previous_content_path
 
     print(
-        "Smoke test passed: QML loaded, visual.json import worked, filters persisted, active-only search/replace behaved correctly."
+        "Smoke test passed: QML loaded, content filters/macros imported, suggestions worked, and active-only search/replace behaved correctly."
     )
     return 0
 
+
+def _write_smoke_content(content_root: Path) -> None:
+    filters_root = content_root / "filters"
+    macros_root = content_root / "macros"
+    filters_root.mkdir(parents=True)
+    macros_root.mkdir(parents=True)
+    (filters_root / "table.json").write_text(
+        json.dumps(
+            {
+                "id": "smoke.filter.table",
+                "displayName": "Smoke Table",
+                "color": "#4ec9b0",
+                "rules": [{"key": "visualType", "operation": "equals", "value": "table"}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (filters_root / "chart.json").write_text(
+        json.dumps(
+            {
+                "id": "smoke.filter.chart",
+                "displayName": "Smoke Chart",
+                "color": "#c586c0",
+                "rules": [{"key": "visualType", "operation": "includes", "value": "chart"}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (macros_root / "find-target-key.json").write_text(
+        json.dumps(
+            {
+                "id": "builtin.macro.find-target-key",
+                "name": "Find Target Key",
+                "steps": [{"type": "search", "searchValue": "targetKey"}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (macros_root / "apply-table-filter.json").write_text(
+        json.dumps(
+            {
+                "id": "smoke.macro.apply-table-filter",
+                "name": "Apply Smoke Table Filter",
+                "steps": [{"type": "filter", "filterName": "Smoke Table"}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+    (macros_root / "missing-filter.json").write_text(
+        json.dumps(
+            {
+                "id": "smoke.macro.missing-filter",
+                "name": "Missing Filter Macro",
+                "steps": [{"type": "filter", "filterName": "Missing"}],
+            },
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+
+def _process_macro_events(app: QApplication, controller: AppController) -> None:
+    for _attempt in range(50):
+        app.processEvents()
+        if not controller.get_any_macro_running():
+            return
+    raise AssertionError("Macro did not finish within the smoke-test event budget")

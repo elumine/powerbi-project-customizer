@@ -1,0 +1,315 @@
+﻿This file describes application v4 features.
+
+# Application
+- based on application v1, v2 and v3 features
+- target platform is Windows
+- uses Python, PySide6, QML and QStyle for UI
+- keeps VS Code dark theme style
+
+# New Features
+- create suggestions sidebar tab button
+  - button is displayed in left side panel near file explorer, search and filters buttons
+  - onclick opens suggestions panel
+  - active button state should match existing sidebar tab style
+
+- create suggestions panel
+  - panel displays duplicated JSON keys and duplicated JSON values found in imported JSON files
+  - key duplications and value duplications are displayed as 2 separate lists
+    - "Keys"
+    - "Values"
+  - each list item displays duplicated text and occurrence count
+    - format is "{duplicationValue} : {duplicationCount}"
+  - each list item has unique stable background color
+    - color is generated from duplication type and duplication value
+    - same duplicated value should keep same color while files are loaded
+  - each list item is expandable
+    - collapsed state displays duplicated text and count
+    - expanded state displays metadata about every occurrence
+  - each occurrence metadata row displays
+    - file display name
+    - JSON path
+    - occurrence type
+      - key
+      - value
+    - value preview when occurrence type is key
+  - clicking duplicated text opens search and replace panel
+    - search input should be filled with duplicationValue
+    - search should run against currently active files
+    - replace input should remain unchanged unless existing search panel behavior clears it
+
+- suggestion detection behavior
+  - analyze every loaded JSON file that has valid parsed JSON content
+  - invalid JSON files are skipped by suggestion detection
+  - duplicated keys are detected by key text
+    - key comparison is case insensitive
+    - key display value should use the first encountered original casing
+    - keys are counted across all loaded valid JSON files
+    - repeated keys at different JSON paths count as separate occurrences
+  - duplicated values are detected by normalized primitive value text
+    - only primitive JSON values are counted
+      - string
+      - number
+      - boolean
+      - null
+    - objects and arrays are not counted as duplicated values
+    - value comparison is case insensitive for strings
+    - number, boolean and null values are compared by string representation
+    - value display should use the first encountered original text representation
+  - duplicated item is shown only when duplicationCount is greater than 1
+  - suggestions are recalculated when files are imported, removed or edited
+    - recalculation after file text edit should be debounced
+  - suggestions respect active content filter only when opening search from a suggestion
+    - suggestion list itself is based on all loaded valid JSON files
+    - opened search executes using existing v3 active-file search behavior
+
+- create macros sidebar tab button
+  - button is displayed in left side panel near file explorer, search, filters and suggestions buttons
+  - onclick opens macros panel
+  - active button state should match existing sidebar tab style
+
+- create macros panel
+  - panel displays list of imported macros
+  - each macro item displays macro name
+  - each macro item displays number of steps
+  - each macro item has run button
+  - each macro item is expandable
+    - expanded state displays ordered steps
+    - each step displays type and configured values
+  - panel displays validation errors for invalid macros
+    - invalid macros cannot be run
+  - panel has refresh/reload action if existing application architecture supports reloading content files at runtime
+    - if runtime reload is not supported, macros are loaded during app startup
+
+- macro run behavior
+  - running a macro executes its steps in declared order
+  - macro execution uses the same underlying actions as the UI
+    - filter step applies an existing content filter
+    - search step runs search on active files
+    - search-and-replace step runs search on active files and then replaces matches
+  - if a step fails validation before execution
+    - macro does not start
+    - UI displays validation error for the macro
+  - if a step fails during execution
+    - remaining steps are not executed
+    - UI displays failed step and error message
+    - completed previous steps are not automatically reverted
+  - macro execution should not block the UI
+  - UI should show running state while macro is executing
+  - user cannot start the same macro again while it is already running
+
+- import filters from external JSON files
+  - filters are loaded from application content folder
+  - each filter file uses JSON format
+  - filename without extension becomes default filter display name
+    - filter file may override displayName if schema includes displayName
+  - existing default "Table" and "Chart" filters should be moved from hardcoded creation into JSON files in content folder
+  - imported filters use the same data model and matching logic as v3 filters
+  - imported filters are available in filters panel together with user-created filters
+  - imported filter ids should be stable between app launches
+    - stable id can be derived from file path or explicit id field
+  - imported filters are read-only unless existing UI supports editing external content files
+    - user-created saved filters remain editable
+
+- import macros from external JSON files
+  - macros are loaded from application content folder
+  - each macro file uses JSON format
+  - filename without extension becomes default macro name
+    - macro file may override name if schema includes name
+  - create a few example macro JSON files in content folder
+  - imported macro ids should be stable between app launches
+    - stable id can be derived from file path or explicit id field
+
+# Data Model
+- File item
+  - id
+  - original path
+  - display name from v2 name detection logic
+  - raw text content
+  - parsed JSON content if valid
+  - parse error if invalid
+  - isActive boolean from v3 filtering
+
+- Suggestion item
+  - id
+    - unique stable id generated from type and normalized value
+  - type
+    - key
+    - value
+  - duplicationValue
+    - display text using first encountered original representation
+  - normalizedValue
+    - internal value used for duplicate grouping
+  - duplicationCount
+  - color
+    - stable UI color generated from type and normalizedValue
+  - occurrences
+    - array of suggestion occurrences
+
+- Suggestion occurrence
+  - fileId
+  - fileDisplayName
+  - jsonPath
+    - dot/bracket path to the location in JSON
+    - examples
+      - "root.visualType"
+      - "root.pages[0].visualType"
+  - occurrenceType
+    - key
+    - value
+  - key
+    - parent key when available
+  - valuePreview
+    - short string preview of related value
+
+- Macro item
+  - id
+    - unique stable id generated from file path or explicit id
+  - name
+  - steps
+    - array of macro steps
+  - sourcePath
+    - path to imported macro JSON file
+  - validationErrors
+    - array of validation error messages
+
+- Macro step
+  - id
+    - unique generated id for UI display
+  - type
+    - filter
+    - search
+    - search-and-replace
+  - filterName
+    - required for filter step
+  - searchValue
+    - required for search and search-and-replace steps
+  - replaceValue
+    - required for search-and-replace step
+
+- Imported filter item
+  - uses v3 Filter item shape
+  - id
+  - displayName
+  - color
+  - rules
+  - sourcePath
+  - isReadOnly boolean
+
+# JSON File Schemas
+- imported filter file
+  - optional id
+  - optional displayName
+  - optional color
+  - required rules array
+  - each rule requires
+    - key
+    - operation
+      - equals
+      - includes
+      - notEquals
+      - notIncludes
+    - value
+
+- imported macro file
+  - optional id
+  - optional name
+  - required steps array
+  - each step requires type
+    - filter step
+      - type is "filter"
+      - filterName is required
+    - search step
+      - type is "search"
+      - searchValue is required
+    - search-and-replace step
+      - type is "search-and-replace"
+      - searchValue is required
+      - replaceValue is required
+
+# Suggestion Detection Logic
+- recursively traverse parsed JSON content
+  - object keys should be counted at every nested object level
+  - object values should be recursively traversed
+  - array items should be recursively traversed
+- key occurrence
+  - when traversing an object property, record property key as a key occurrence
+  - JSON path points to the property location
+  - valuePreview is generated from the property value
+- value occurrence
+  - when traversing a primitive value, record primitive value as a value occurrence
+  - JSON path points to the primitive value location
+- normalization
+  - trim key text for grouping
+  - lowercase keys for grouping
+  - lowercase string values for grouping
+  - convert null to "null"
+  - convert booleans to "true" or "false"
+  - convert numbers to their JSON string representation
+- sorting
+  - duplicate lists should sort by duplicationCount descending
+  - ties should sort alphabetically by duplicationValue
+
+# Macro Execution Logic
+- validate all macro steps before running macro
+  - macro name is required
+  - steps array must have at least 1 step
+  - unknown step types are invalid
+  - filter step is invalid when filterName is empty
+  - filter step is invalid when no loaded filter has matching displayName
+  - search step is invalid when searchValue is empty
+  - search-and-replace step is invalid when searchValue is empty
+  - search-and-replace step allows empty replaceValue
+- filter step
+  - find filter by displayName
+  - if multiple filters have same displayName, use first filter in filters panel order
+  - apply filter using v3 filter apply behavior
+- search step
+  - open or update search and replace panel
+  - set search input to searchValue
+  - execute search using existing active-file search behavior
+- search-and-replace step
+  - open or update search and replace panel
+  - set search input to searchValue
+  - set replace input to replaceValue
+  - execute search using existing active-file search behavior
+  - execute replace all using existing active-file replace behavior
+
+# Persistence
+- imported filters and macros are loaded from content folder on app startup
+- imported filters and macros should not be persisted into user settings as duplicated copies
+- user-created v3 filters remain persisted between app sessions
+- active filter state can remain session-only
+- macro execution history does not need to be persisted
+- suggestion data does not need to be persisted
+  - suggestions are derived from currently loaded files
+
+# Edge Cases
+- invalid imported filter JSON file
+  - skip filter
+  - log validation error
+  - show error in filters panel if existing panel supports import error display
+- invalid imported macro JSON file
+  - skip runnable macro
+  - show macro item with validation error when possible
+- duplicated imported filter names
+  - allow duplicates
+  - keep ids unique
+  - macro filter step with duplicated name uses first filter in filters panel order
+- duplicated macro names
+  - allow duplicates
+  - keep ids unique
+- missing content folder
+  - app should start normally
+  - user-created persisted filters should still load
+- empty loaded file list
+  - suggestions panel shows empty state
+  - macros can be displayed but running search or replace steps affects no files
+- invalid JSON loaded files
+  - ignored by suggestions
+  - still follow v3 behavior for filters, file explorer and search
+- very large JSON files
+  - suggestion recalculation should be debounced after edits
+  - UI should remain responsive while recalculating
+- search opened from suggestion while filter is active
+  - search results include only active files
+  - inactive files remain excluded by v3 search behavior

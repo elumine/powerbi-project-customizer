@@ -13,6 +13,8 @@ class FilterListModel(QAbstractListModel):
     COLOR_ROLE = ID_ROLE + 2
     RULE_SUMMARY_ROLE = ID_ROLE + 3
     ACTIVE_ROLE = ID_ROLE + 4
+    SOURCE_PATH_ROLE = ID_ROLE + 5
+    READ_ONLY_ROLE = ID_ROLE + 6
 
     def __init__(self) -> None:
         super().__init__()
@@ -39,6 +41,10 @@ class FilterListModel(QAbstractListModel):
             return self._rule_summary(content_filter)
         if role == self.ACTIVE_ROLE:
             return content_filter.id == self._active_filter_id
+        if role == self.SOURCE_PATH_ROLE:
+            return content_filter.source_path
+        if role == self.READ_ONLY_ROLE:
+            return content_filter.is_read_only
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -48,6 +54,8 @@ class FilterListModel(QAbstractListModel):
             self.COLOR_ROLE: QByteArray(b"color"),
             self.RULE_SUMMARY_ROLE: QByteArray(b"ruleSummary"),
             self.ACTIVE_ROLE: QByteArray(b"active"),
+            self.SOURCE_PATH_ROLE: QByteArray(b"sourcePath"),
+            self.READ_ONLY_ROLE: QByteArray(b"readOnly"),
         }
 
     @property
@@ -82,10 +90,11 @@ class FilterListModel(QAbstractListModel):
     def used_colors(self, exclude_filter_id: str = "") -> set[str]:
         return {item.color for item in self._filters if item.id != exclude_filter_id}
 
-    def reset(self, filters: list[ContentFilter]) -> None:
+    def reset(self, filters: list[ContentFilter], active_filter_id: str = "") -> None:
+        active_id = active_filter_id if any(item.id == active_filter_id for item in filters) else ""
         self.beginResetModel()
         self._filters = filters
-        self._active_filter_id = ""
+        self._active_filter_id = active_id
         self.endResetModel()
         self.countChanged.emit()
 

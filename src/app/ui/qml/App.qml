@@ -1,4 +1,4 @@
-﻿import QtQuick
+import QtQuick
 import QtQuick.Controls
 import QtQml
 import QtQuick.Layouts
@@ -60,6 +60,9 @@ ApplicationWindow {
         property int totalMatches: root.controller ? root.controller.totalMatches : 0
         property int folderScanCount: root.controller ? root.controller.folderScanCount : 0
         property int filterCount: root.controller ? root.controller.filterCount : 0
+        property int suggestionKeyCount: root.controller ? root.controller.suggestionKeyCount : 0
+        property int suggestionValueCount: root.controller ? root.controller.suggestionValueCount : 0
+        property int macroCount: root.controller ? root.controller.macroCount : 0
         property int editingRuleCount: root.controller ? root.controller.editingRuleCount : 0
         property bool hasDirtyFiles: root.controller ? root.controller.hasDirtyFiles : false
         property bool caseSensitive: root.controller ? root.controller.caseSensitive : false
@@ -70,10 +73,21 @@ ApplicationWindow {
         property var fileModel: root.controller ? root.controller.fileModel : null
         property var folderScanModel: root.controller ? root.controller.folderScanModel : null
         property var filterModel: root.controller ? root.controller.filterModel : null
+        property var suggestionKeyModel: root.controller ? root.controller.suggestionKeyModel : null
+        property var suggestionValueModel: root.controller ? root.controller.suggestionValueModel : null
+        property var macroModel: root.controller ? root.controller.macroModel : null
         property var editingRuleModel: root.controller ? root.controller.editingRuleModel : null
+        property bool anyMacroRunning: root.controller ? root.controller.anyMacroRunning : false
     }
 
     function callController(action) { if (root.controller) action(root.controller) }
+    function panelIndex() {
+        if (root.activePanel === "explorer") return 0
+        if (root.activePanel === "search") return 1
+        if (root.activePanel === "filters") return 2
+        if (root.activePanel === "suggestions") return 3
+        return 4
+    }
     function revealMatch(fileIndex, line) {
         root.pageName = "management"
         root.pendingRevealFileIndex = fileIndex
@@ -90,6 +104,11 @@ ApplicationWindow {
 
     Shortcut { sequences: [StandardKey.Save]; onActivated: root.callController(function(c) { c.saveFile(appState.currentIndex) }) }
     Shortcut { sequence: "Ctrl+Shift+S"; onActivated: root.callController(function(c) { c.saveAll() }) }
+
+    Connections {
+        target: root.controller
+        function onPanelRequested(panelName) { root.activePanel = panelName }
+    }
 
     component ChromeButton: Button {
         id: control
@@ -180,6 +199,61 @@ ApplicationWindow {
         Text { id: chipText; anchors.fill: parent; anchors.margins: 4; text: chip.value; color: chip.chipTextColor; font.family: "Consolas"; font.pixelSize: 12; elide: Text.ElideRight; verticalAlignment: Text.AlignVCenter }
     }
 
+    component SuggestionSection: ColumnLayout {
+        id: section
+        property string title: ""
+        property string suggestionType: "key"
+        property var suggestionModel: null
+        property int itemCount: 0
+        Layout.fillWidth: true
+        Layout.fillHeight: true
+        spacing: 6
+
+        RowLayout { Layout.fillWidth: true
+            PanelTitle { text: section.title; Layout.fillWidth: true }
+            Text { text: section.itemCount + " item(s)"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 11 }
+        }
+        ListView { id: suggestionList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: section.suggestionModel
+            delegate: Rectangle {
+                id: suggestionRow
+                property bool expanded: false
+                width: suggestionList.width
+                height: 40 + (expanded ? Math.min(190, occurrenceColumn.implicitHeight + 10) : 0)
+                color: root.editorBackground
+                border.color: suggestionColor
+                radius: 4
+                clip: true
+                ColumnLayout { anchors.fill: parent; anchors.margins: 5; spacing: 5
+                    Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 30; color: suggestionColor; radius: 3
+                        RowLayout { anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 8; spacing: 4
+                            IconButton { text: suggestionRow.expanded ? "v" : ">"; contentColor: "#ffffff"; onClicked: suggestionRow.expanded = !suggestionRow.expanded }
+                            Text { Layout.fillWidth: true; text: duplicationValue + " : " + duplicationCount; color: "#ffffff"; font.family: "Consolas"; font.pixelSize: 12; font.bold: true; elide: Text.ElideRight
+                                MouseArea { anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor; onClicked: root.callController(function(c) { c.openSuggestionSearch(section.suggestionType, index) }) }
+                            }
+                        }
+                    }
+                    ScrollView { visible: suggestionRow.expanded; Layout.fillWidth: true; Layout.preferredHeight: Math.min(180, occurrenceColumn.implicitHeight + 4); clip: true
+                        ColumnLayout { id: occurrenceColumn; width: suggestionList.width - 18; spacing: 4
+                            Repeater { model: occurrences
+                                delegate: Rectangle { Layout.fillWidth: true; height: 52; color: root.panelBackground; border.color: root.borderColor; radius: 2
+                                    ColumnLayout { anchors.fill: parent; anchors.margins: 5; spacing: 1
+                                        RowLayout { Layout.fillWidth: true; spacing: 5
+                                            Text { Layout.fillWidth: true; text: modelData.fileDisplayName; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 11; elide: Text.ElideMiddle }
+                                            Text { text: modelData.occurrenceType; color: root.okColor; font.family: "Segoe UI"; font.pixelSize: 10 }
+                                        }
+                                        Text { Layout.fillWidth: true; text: modelData.jsonPath; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideMiddle }
+                                        Text { Layout.fillWidth: true; text: (modelData.key ? modelData.key + " - " : "") + modelData.valuePreview; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        MutedLabel { visible: section.itemCount === 0; Layout.fillWidth: true; text: "No duplicates." }
+    }
+
     header: Rectangle {
         height: 34
         color: root.headerBackground
@@ -250,13 +324,15 @@ ApplicationWindow {
                         PanelButton { text: "E"; tooltipText: "Explorer"; active: root.activePanel === "explorer"; onClicked: root.activePanel = "explorer" }
                         PanelButton { text: "S"; tooltipText: "Search"; active: root.activePanel === "search"; onClicked: root.activePanel = "search" }
                         PanelButton { text: "F"; tooltipText: "Filters"; active: root.activePanel === "filters"; onClicked: root.activePanel = "filters" }
+                        PanelButton { text: "!"; tooltipText: "Suggestions"; active: root.activePanel === "suggestions"; onClicked: root.activePanel = "suggestions" }
+                        PanelButton { text: "M"; tooltipText: "Macros"; active: root.activePanel === "macros"; onClicked: root.activePanel = "macros" }
                     }
                 }
 
                 Rectangle { Layout.preferredWidth: 350; Layout.fillHeight: true; color: root.panelBackground; border.color: root.borderColor
                     StackLayout {
                         anchors.fill: parent
-                        currentIndex: root.activePanel === "explorer" ? 0 : root.activePanel === "search" ? 1 : 2
+                        currentIndex: root.panelIndex()
 
                         ColumnLayout { Layout.fillWidth: true; Layout.fillHeight: true; Layout.margins: 10; spacing: 8
                             RowLayout { Layout.fillWidth: true
@@ -364,7 +440,7 @@ ApplicationWindow {
                             ListView { id: filterList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: appState.filterModel
                                 delegate: Rectangle {
                                     width: filterList.width
-                                    height: 82
+                                    height: 88
                                     color: active ? root.listActive : filterMouse.containsMouse ? root.listHover : root.editorBackground
                                     border.color: active ? color : root.borderColor
                                     radius: 4
@@ -372,16 +448,74 @@ ApplicationWindow {
                                     ColumnLayout { anchors.fill: parent; anchors.margins: 8; spacing: 5
                                         RowLayout { Layout.fillWidth: true; spacing: 8
                                             Rectangle { Layout.preferredWidth: 10; Layout.preferredHeight: 10; radius: 5; color: model.color }
-                                            Text { Layout.fillWidth: true; text: displayName; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight }
+                                            ColumnLayout { Layout.fillWidth: true; spacing: 1
+                                                Text { Layout.fillWidth: true; text: displayName; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight }
+                                                Text { visible: readOnly; Layout.fillWidth: true; text: "Imported"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 10; elide: Text.ElideRight }
+                                            }
                                             ChromeButton { text: active ? "On" : "Apply"; implicitWidth: 58; normalColor: active ? root.accentGreen : root.accentBlue; hoverColor: active ? root.accentGreenHover : root.accentBlueHover; onClicked: root.callController(function(c) { active ? c.deactivateFilter() : c.applyFilter(index) }) }
-                                            IconButton { text: "E"; ToolTip.visible: hovered; ToolTip.text: "Edit"; onClicked: root.callController(function(c) { c.openEditFilterEditor(index) }) }
-                                            IconButton { text: "x"; contentColor: root.accentRed; ToolTip.visible: hovered; ToolTip.text: "Delete"; onClicked: root.callController(function(c) { c.deleteFilter(index) }) }
+                                            IconButton { text: "E"; enabled: !readOnly; ToolTip.visible: hovered; ToolTip.text: readOnly ? "Read-only" : "Edit"; onClicked: root.callController(function(c) { c.openEditFilterEditor(index) }) }
+                                            IconButton { text: "x"; enabled: !readOnly; contentColor: root.accentRed; ToolTip.visible: hovered; ToolTip.text: readOnly ? "Read-only" : "Delete"; onClicked: root.callController(function(c) { c.deleteFilter(index) }) }
                                         }
                                         Text { Layout.fillWidth: true; text: ruleSummary; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 11; elide: Text.ElideRight }
                                     }
                                 }
                             }
                             MutedLabel { visible: appState.filterCount === 0; Layout.fillWidth: true; text: "No filters." }
+                        }
+
+                        ColumnLayout { Layout.fillWidth: true; Layout.fillHeight: true; Layout.margins: 10; spacing: 8
+                            RowLayout { Layout.fillWidth: true
+                                PanelTitle { text: "SUGGESTIONS"; Layout.fillWidth: true }
+                                Text { text: (appState.suggestionKeyCount + appState.suggestionValueCount) + " duplicate(s)"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 11 }
+                            }
+                            SuggestionSection { title: "KEYS"; suggestionType: "key"; suggestionModel: appState.suggestionKeyModel; itemCount: appState.suggestionKeyCount }
+                            SuggestionSection { title: "VALUES"; suggestionType: "value"; suggestionModel: appState.suggestionValueModel; itemCount: appState.suggestionValueCount }
+                        }
+
+                        ColumnLayout { Layout.fillWidth: true; Layout.fillHeight: true; Layout.margins: 10; spacing: 8
+                            RowLayout { Layout.fillWidth: true
+                                PanelTitle { text: "MACROS"; Layout.fillWidth: true }
+                                Text { text: appState.macroCount + " macro(s)"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 11 }
+                                IconButton { text: "R"; ToolTip.visible: hovered; ToolTip.text: "Reload"; onClicked: root.callController(function(c) { c.reloadContent() }) }
+                            }
+                            ListView { id: macroList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: appState.macroModel
+                                delegate: Rectangle {
+                                    id: macroRow
+                                    property bool expanded: false
+                                    property int failedIndex: failedStepIndex
+                                    width: macroList.width
+                                    height: 58 + (validationText.length > 0 ? Math.min(58, validationLabel.implicitHeight + 6) : 0) + (expanded ? Math.min(190, stepsColumn.implicitHeight + 10) : 0)
+                                    color: running ? "#30363d" : macroMouse.containsMouse ? root.listHover : root.editorBackground
+                                    border.color: running ? root.okColor : validationText.length > 0 ? root.warningColor : root.borderColor
+                                    radius: 4
+                                    clip: true
+                                    MouseArea { id: macroMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
+                                    ColumnLayout { anchors.fill: parent; anchors.margins: 8; spacing: 5
+                                        RowLayout { Layout.fillWidth: true; spacing: 8
+                                            IconButton { text: macroRow.expanded ? "v" : ">"; onClicked: macroRow.expanded = !macroRow.expanded }
+                                            ColumnLayout { Layout.fillWidth: true; spacing: 1
+                                                Text { Layout.fillWidth: true; text: name; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 13; font.bold: true; elide: Text.ElideRight }
+                                                Text { Layout.fillWidth: true; text: stepCount + " step(s) - " + statusText; color: validationText.length > 0 ? root.warningColor : running ? root.okColor : root.mutedText; font.family: "Segoe UI"; font.pixelSize: 10; elide: Text.ElideRight }
+                                            }
+                                            ChromeButton { text: running ? "Running" : "Run"; implicitWidth: 72; enabled: canRun && !appState.anyMacroRunning; normalColor: root.accentGreen; hoverColor: root.accentGreenHover; pressedColor: "#126a4d"; onClicked: root.callController(function(c) { c.runMacro(index) }) }
+                                        }
+                                        Text { id: validationLabel; visible: validationText.length > 0; Layout.fillWidth: true; text: validationText; color: root.warningColor; font.family: "Segoe UI"; font.pixelSize: 10; wrapMode: Text.WordWrap; maximumLineCount: 3; elide: Text.ElideRight }
+                                        ScrollView { visible: macroRow.expanded; Layout.fillWidth: true; Layout.preferredHeight: Math.min(180, stepsColumn.implicitHeight + 4); clip: true
+                                            ColumnLayout { id: stepsColumn; width: macroList.width - 20; spacing: 4
+                                                Repeater { model: steps
+                                                    delegate: Rectangle { Layout.fillWidth: true; height: 42; color: index === macroRow.failedIndex ? "#3d2727" : root.panelBackground; border.color: index === macroRow.failedIndex ? root.accentRed : root.borderColor; radius: 2
+                                                        ColumnLayout { anchors.fill: parent; anchors.margins: 5; spacing: 1
+                                                            Text { Layout.fillWidth: true; text: (index + 1) + ". " + modelData.type; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 11; font.bold: true; elide: Text.ElideRight }
+                                                            Text { Layout.fillWidth: true; text: modelData.summary; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            MutedLabel { visible: appState.macroCount === 0; Layout.fillWidth: true; text: "No macros." }
                         }
                     }
                 }

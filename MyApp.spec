@@ -1,4 +1,4 @@
-﻿# -*- mode: python ; coding: utf-8 -*-
+# -*- mode: python ; coding: utf-8 -*-
 
 
 a = Analysis(
@@ -8,6 +8,7 @@ a = Analysis(
     datas=[
         ("src/app/ui/qml", "app/ui/qml"),
         ("src/app/ui/styles", "app/ui/styles"),
+        ("content", "content"),
     ],
     hiddenimports=[],
     hookspath=[],

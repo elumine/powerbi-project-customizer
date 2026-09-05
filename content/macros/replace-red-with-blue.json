@@ -1,0 +1,11 @@
+{
+  "id": "builtin.macro.replace-red-with-blue",
+  "name": "Replace Red With Blue",
+  "steps": [
+    {
+      "type": "search-and-replace",
+      "searchValue": "red",
+      "replaceValue": "blue"
+    }
+  ]
+}

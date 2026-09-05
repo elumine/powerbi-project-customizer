@@ -1,0 +1,10 @@
+{
+  "id": "builtin.macro.find-target-key",
+  "name": "Find Target Key",
+  "steps": [
+    {
+      "type": "search",
+      "searchValue": "targetKey"
+    }
+  ]
+}
