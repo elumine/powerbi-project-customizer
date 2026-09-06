@@ -1,0 +1,13 @@
+﻿{
+    "id":  "builtin.filter.visual-type-bar",
+    "displayName":  "Bar visuals",
+    "targetJsonFileType":  "Visual",
+    "color":  "#4ec9b0",
+    "rules":  [
+        {
+            "operation":  "includes",
+            "key":  "visualType",
+            "value":  "Bar"
+        }
+    ]
+}

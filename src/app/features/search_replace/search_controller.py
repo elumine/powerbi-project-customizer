@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import re
 
@@ -55,6 +55,12 @@ class SearchController:
         document = self._files.document_at(self._active_match_file_index)
         return document.match_count if document is not None and document.is_active else 0
 
+    def reset(self) -> None:
+        self._query = SearchQuery()
+        self._total_matches = 0
+        self._reset_active_match()
+        self.refresh()
+
     def set_search_text(self, text: str) -> bool:
         value = text or ""
         if value == self._query.needle:
@@ -105,6 +111,38 @@ class SearchController:
             self._total_matches += match_count
 
         self._ensure_active_match_is_valid()
+
+    def replace_current_match(self) -> int:
+        if self._query.is_empty:
+            return 0
+
+        locations = self._match_locations()
+        if not locations:
+            self._reset_active_match()
+            return 0
+
+        current = (self._active_match_file_index, self._active_match_index)
+        if current not in locations:
+            current = locations[0]
+        row, match_index = current
+        document = self._files.document_at(row)
+        if document is None or not document.is_active:
+            return 0
+
+        span = self._service.match_span(document.text, self._query.needle, match_index, self._query.case_sensitive)
+        if span is None:
+            self.refresh()
+            return self.replace_current_match()
+
+        start, end = span
+        new_text = self._service.replace_span(document.text, start, end, self._query.replacement)
+        if new_text == document.text:
+            return 0
+
+        self._files.set_document_text(row, new_text)
+        self.refresh()
+        self.navigate_next()
+        return 1
 
     def replace_current_file(self, row: int) -> int:
         document = self._files.document_at(row)

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from pathlib import Path
 
@@ -27,14 +27,30 @@ class FileManagementController:
         return sum(1 for document in self._files.documents() if document.is_active)
 
     @property
+    def visible_file_count(self) -> int:
+        return sum(1 for document in self._files.documents() if document.visible_in_tree)
+
+    @property
     def has_dirty_files(self) -> bool:
         return any(document.is_dirty for document in self._files.documents())
+
+    def reset(self) -> None:
+        self._files.clear()
+        self._current_index = -1
 
     def set_current_index(self, index: int) -> bool:
         coerced = self.coerce_selectable_index(index)
         if coerced == self._current_index:
             return False
         self._current_index = coerced
+        return True
+
+    def force_current_index(self, index: int) -> bool:
+        if not 0 <= index < self._files.count:
+            index = -1
+        if index == self._current_index:
+            return False
+        self._current_index = index
         return True
 
     def ensure_current_index(self) -> bool:
@@ -76,10 +92,10 @@ class FileManagementController:
 
     def coerce_selectable_index(self, index: int) -> int:
         document = self._files.document_at(index)
-        if document is not None and document.is_active:
+        if document is not None and document.visible_in_tree:
             return index
         for row, candidate in enumerate(self._files.documents()):
-            if candidate.is_active:
+            if candidate.visible_in_tree:
                 return row
         return -1
 
@@ -94,6 +110,18 @@ class FileManagementController:
     def current_document_path(self) -> str:
         document = self._files.document_at(self._current_index)
         return str(document.path) if document is not None else ""
+
+    def current_document_file_type(self) -> str:
+        document = self._files.document_at(self._current_index)
+        return document.file_type_text if document is not None else ""
+
+    def current_document_relative_path(self) -> str:
+        document = self._files.document_at(self._current_index)
+        return document.relative_path if document is not None else ""
+
+    def current_document_highlighted_html(self) -> str:
+        document = self._files.document_at(self._current_index)
+        return document.highlighted_html if document is not None else ""
 
     def current_document_dirty(self) -> bool:
         document = self._files.document_at(self._current_index)

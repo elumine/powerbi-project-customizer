@@ -1,0 +1,13 @@
+﻿{
+    "id":  "builtin.filter.visual-type-slicer",
+    "displayName":  "Slicer visuals",
+    "targetJsonFileType":  "Visual",
+    "color":  "#b5cea8",
+    "rules":  [
+        {
+            "operation":  "includes",
+            "key":  "visualType",
+            "value":  "Slicer"
+        }
+    ]
+}

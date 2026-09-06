@@ -30,6 +30,22 @@ class SearchService:
         return re.subn(re.escape(needle), lambda _match: replacement, text, flags=flags)
 
     @classmethod
+    def match_span(cls, text: str, needle: str, match_index: int, case_sensitive: bool = False) -> tuple[int, int] | None:
+        if needle == "" or match_index < 0:
+            return None
+        flags = 0 if case_sensitive else re.IGNORECASE
+        for index, match in enumerate(re.finditer(re.escape(needle), text, flags)):
+            if index == match_index:
+                return match.start(), match.end()
+        return None
+
+    @classmethod
+    def replace_span(cls, text: str, start: int, end: int, replacement: str) -> str:
+        if start < 0 or end < start or end > len(text):
+            return text
+        return text[:start] + replacement + text[end:]
+
+    @classmethod
     def previews(
         cls,
         text: str,

@@ -1,0 +1,13 @@
+﻿{
+    "id":  "builtin.filter.visual-type-chart",
+    "displayName":  "Chart visuals",
+    "targetJsonFileType":  "Visual",
+    "color":  "#ce9178",
+    "rules":  [
+        {
+            "operation":  "includes",
+            "key":  "visualType",
+            "value":  "Chart"
+        }
+    ]
+}

@@ -1,0 +1,11 @@
+﻿{
+  "id": "builtin.macro.example-visual-editor-change",
+  "name": "Example visual editor change",
+  "steps": [
+    {
+      "type": "visual-editor-change",
+      "controlId": "general-title-font-color",
+      "value": "#3B82F6"
+    }
+  ]
+}

@@ -1,0 +1,191 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+
+  "name": "8c84d07916a83320480c",
+
+  "displayName": "Retention Cockpit",
+
+  "displayOption": "FitToPage",
+
+  "height": 890,
+
+  "width": 1280,
+
+  "filterConfig": {
+
+    "filters": [
+
+      {
+
+        "name": "abdbf2aa684d65c9ca10",
+
+        "field": {
+
+          "Column": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Calendar Retention"
+
+              }
+
+            },
+
+            "Property": "Date"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "6f4561cbcc0b1e503919",
+
+        "field": {
+
+          "Column": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Targets > Calendar"
+
+              }
+
+            },
+
+            "Property": "Until Today"
+
+          }
+
+        },
+
+        "type": "Categorical",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "e73124990bb9479a29e6",
+
+        "field": {
+
+          "Column": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Calendar Retention"
+
+              }
+
+            },
+
+            "Property": "Date"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "filter": {
+
+          "Version": 2,
+
+          "From": [
+
+            {
+
+              "Name": "c",
+
+              "Entity": "Calendar Retention",
+
+              "Type": 0
+
+            }
+
+          ],
+
+          "Where": [
+
+            {
+
+              "Condition": {
+
+                "Comparison": {
+
+                  "ComparisonKind": 2,
+
+                  "Left": {
+
+                    "Column": {
+
+                      "Expression": {
+
+                        "SourceRef": {
+
+                          "Source": "c"
+
+                        }
+
+                      },
+
+                      "Property": "Date"
+
+                    }
+
+                  },
+
+                  "Right": {
+
+                    "DateSpan": {
+
+                      "Expression": {
+
+                        "Literal": {
+
+                          "Value": "datetime'2026-04-01T00:00:00'"
+
+                        }
+
+                      },
+
+                      "TimeUnit": 5
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          ]
+
+        },
+
+        "howCreated": "User"
+
+      }
+
+    ]
+
+  }
+
+}

@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from app.core.content_filter import FILTER_OPERATIONS, ContentFilter, FilterRule, filter_value_to_text
+from app.core.json_file_type import FILTER_TARGET_ALL, FILTER_TARGET_TYPES, normalize_filter_target
 from app.core.stable_color import stable_color, stable_id
 
 
@@ -30,7 +31,7 @@ class ImportedFilterRepository:
             return result
 
         for path in sorted(folder.rglob("*.json"), key=lambda item: str(item).casefold()):
-            content_filter, errors = self._load_file(path)
+            content_filter, errors = self.load_filter_file(path, read_only=True, strict_target=True)
             if errors:
                 result.errors.extend(errors)
                 continue
@@ -38,7 +39,13 @@ class ImportedFilterRepository:
                 result.filters.append(content_filter)
         return result
 
-    def _load_file(self, path: Path) -> tuple[ContentFilter | None, list[str]]:
+    def load_filter_file(
+        self,
+        path: Path,
+        read_only: bool = False,
+        strict_target: bool = False,
+        used_ids: set[str] | None = None,
+    ) -> tuple[ContentFilter | None, list[str]]:
         try:
             data = json.loads(path.read_text(encoding="utf-8-sig"))
         except (OSError, json.JSONDecodeError) as error:
@@ -54,7 +61,15 @@ class ImportedFilterRepository:
         if not rules_data:
             errors.append(f"{path.name}: at least one rule is required.")
 
+        raw_target = str(data.get("targetJsonFileType", FILTER_TARGET_ALL)).strip() or FILTER_TARGET_ALL
+        target = normalize_filter_target(raw_target)
+        if strict_target and raw_target not in FILTER_TARGET_TYPES:
+            errors.append(f"{path.name}: targetJsonFileType must be one of {', '.join(FILTER_TARGET_TYPES)}.")
+
         filter_id = self._filter_id(path, data)
+        if used_ids and filter_id in used_ids:
+            filter_id = stable_id("filter.imported-copy", f"{path.resolve()}:{len(used_ids)}")
+
         rules: list[FilterRule] = []
         for index, rule_data in enumerate(rules_data):
             rule, rule_errors = self._rule_from_data(filter_id, index, rule_data)
@@ -76,11 +91,17 @@ class ImportedFilterRepository:
                 display_name=display_name,
                 color=color,
                 rules=rules,
-                source_path=str(path),
-                is_read_only=True,
+                target_json_file_type=target,
+                source_path=str(path) if read_only else "",
+                is_read_only=read_only,
             ),
             [],
         )
+
+    @staticmethod
+    def export_filter(path: Path, content_filter: ContentFilter) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(content_filter.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
 
     def _rule_from_data(self, filter_id: str, index: int, data: Any) -> tuple[FilterRule | None, list[str]]:
         label = f"rule {index + 1}"

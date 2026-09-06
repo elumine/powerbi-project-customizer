@@ -1,0 +1,2515 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+
+  "name": "d9a2a105e53dcb869b02",
+
+  "position": {
+
+    "x": 981.90721649484533,
+
+    "y": 531.95876288659792,
+
+    "z": 16000,
+
+    "height": 311.786941580756,
+
+    "width": 285.92783505154637,
+
+    "tabOrder": 16000
+
+  },
+
+  "visual": {
+
+    "visualType": "barChart",
+
+    "query": {
+
+      "queryState": {
+
+        "Category": {
+
+          "projections": [
+
+            {
+
+              "field": {
+
+                "Column": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "UsersQuery"
+
+                    }
+
+                  },
+
+                  "Property": "ONBOARDING_COMPLETION"
+
+                }
+
+              },
+
+              "queryRef": "UsersQuery.ONBOARDING_COMPLETION",
+
+              "nativeQueryRef": "ONBOARDING_COMPLETION",
+
+              "active": true
+
+            }
+
+          ]
+
+        },
+
+        "Tooltips": {
+
+          "projections": [
+
+            {
+
+              "field": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Measures Folder"
+
+                    }
+
+                  },
+
+                  "Property": "00.00 Conversion_Total_Sample_EC30"
+
+                }
+
+              },
+
+              "queryRef": "Measures Folder.00.00 Conversion_Total_Sample_EC30",
+
+              "nativeQueryRef": "Sample",
+
+              "displayName": "Sample"
+
+            },
+
+            {
+
+              "field": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Measures Folder"
+
+                    }
+
+                  },
+
+                  "Property": "%_Program_Channel_other_Parameter_in_Sales"
+
+                }
+
+              },
+
+              "queryRef": "Measures Folder.%_Program_Channel_other_Parameter_in_Sales",
+
+              "nativeQueryRef": "% of Onboarding Program",
+
+              "displayName": "% of Onboarding Program"
+
+            }
+
+          ]
+
+        },
+
+        "Y": {
+
+          "projections": [
+
+            {
+
+              "field": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Measures Folder"
+
+                    }
+
+                  },
+
+                  "Property": "03.00 %_Conversion_Exclusive_EC30"
+
+                }
+
+              },
+
+              "queryRef": "Measures Folder.03.00 %_Conversion_Exclusive_EC30",
+
+              "nativeQueryRef": "%Exclusive",
+
+              "displayName": "%Exclusive"
+
+            }
+
+          ]
+
+        }
+
+      },
+
+      "sortDefinition": {
+
+        "sort": [
+
+          {
+
+            "field": {
+
+              "Measure": {
+
+                "Expression": {
+
+                  "SourceRef": {
+
+                    "Entity": "Measures Folder"
+
+                  }
+
+                },
+
+                "Property": "03.00 %_Conversion_Exclusive_EC30"
+
+              }
+
+            },
+
+            "direction": "Descending"
+
+          }
+
+        ],
+
+        "isDefaultSort": true
+
+      }
+
+    },
+
+    "objects": {
+
+      "valueAxis": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "showAxisTitle": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "labels": [
+
+        {
+
+          "properties": {
+
+            "detailLabelDisplayUnits": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            },
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "optimizeLabelDisplay": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "labelContainerMaxWidth": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "400D"
+
+                }
+
+              }
+
+            },
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "8D"
+
+                }
+
+              }
+
+            },
+
+            "enableDetailDataLabel": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "detailFontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "8D"
+
+                }
+
+              }
+
+            },
+
+            "detailLabelPrecision": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "0L"
+
+                }
+
+              }
+
+            },
+
+            "labelContentLayout": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'MultiLine'"
+
+                }
+
+              }
+
+            },
+
+            "backgroundTransparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "50L"
+
+                }
+
+              }
+
+            },
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#333333'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "enableBackground": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "labelPosition": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'InsideBase'"
+
+                }
+
+              }
+
+            },
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 1,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Dual_EC30"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "labelPosition": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Auto'"
+
+                }
+
+              }
+
+            },
+
+            "optimizeLabelDisplay": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "11D"
+
+                }
+
+              }
+
+            },
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "23D"
+
+                }
+
+              }
+
+            },
+
+            "labelContentLayout": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'SingleLine'"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.1. New Users - With Mainland purchase transaction"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "dynamicLabelDetail": {
+
+              "expr": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Metrics users"
+
+                    }
+
+                  },
+
+                  "Property": "Abandoners_EC30"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "dataViewWildcard": {
+
+                  "matchingOption": 1
+
+                }
+
+              }
+
+            ],
+
+            "metadata": "Metrics users.Conversion_Abandoner_EC30",
+
+            "highlightMatching": 1
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "dynamicLabelDetail": {
+
+              "expr": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Metrics users"
+
+                    }
+
+                  },
+
+                  "Property": "Converted_EC30"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "dataViewWildcard": {
+
+                  "matchingOption": 1
+
+                }
+
+              }
+
+            ],
+
+            "metadata": "Metrics users.Conversion_Exclusive_EC30",
+
+            "highlightMatching": 1
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "dynamicLabelDetail": {
+
+              "expr": {
+
+                "Measure": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "Metrics users"
+
+                    }
+
+                  },
+
+                  "Property": "Dual_EC30"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "dataViewWildcard": {
+
+                  "matchingOption": 1
+
+                }
+
+              }
+
+            ],
+
+            "metadata": "Metrics users.Conversion_Dual_EC30",
+
+            "highlightMatching": 1
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "15D"
+
+                }
+
+              }
+
+            },
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 1,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "detailFontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "12D"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Exclusive_EC30"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 1,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Abandoner_EC30"
+
+          }
+
+        }
+
+      ],
+
+      "legend": [
+
+        {
+
+          "properties": {
+
+            "position": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'BottomCenter'"
+
+                }
+
+              }
+
+            },
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "layout": [
+
+        {
+
+          "properties": {}
+
+        }
+
+      ],
+
+      "dataPoint": [
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#F3CC8D'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Abandoner_EC30"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#EDE993'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Dual_EC30"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#91C7B9'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.Conversion_Exclusive_EC30"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "metadata": "Metrics users.1. New Users - With Mainland purchase transaction"
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#F98F83'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "Users"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDED_NOT_ONBOARDED"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'Not Onboarded'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#92D2CE'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "Users"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDED_NOT_ONBOARDED"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'Onboarded'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#F98F83'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#92D2CE'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CRM Completion'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#82C7C2'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CSC Completion'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#6CB1AD'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CRM + CSC Completion'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#B9EDEA'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CRM'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#A9E0DD'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CSC'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        },
+
+        {
+
+          "properties": {
+
+            "fill": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#92D2CE'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "data": [
+
+              {
+
+                "scopeId": {
+
+                  "Comparison": {
+
+                    "ComparisonKind": 0,
+
+                    "Left": {
+
+                      "Column": {
+
+                        "Expression": {
+
+                          "SourceRef": {
+
+                            "Entity": "UsersQuery"
+
+                          }
+
+                        },
+
+                        "Property": "ONBOARDING_COMPLETION"
+
+                      }
+
+                    },
+
+                    "Right": {
+
+                      "Literal": {
+
+                        "Value": "'CRM + CSC'"
+
+                      }
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            ]
+
+          }
+
+        }
+
+      ],
+
+      "categoryAxis": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "showAxisTitle": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "8D"
+
+                }
+
+              }
+
+            },
+
+            "innerPadding": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "15L"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "labelColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "maxMarginFactor": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "43L"
+
+                }
+
+              }
+
+            },
+
+            "preferredCategoryWidth": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "20D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "totals": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "visualContainerObjects": {
+
+      "title": [
+
+        {
+
+          "properties": {
+
+            "text": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'30D Conversion Uplift'"
+
+                }
+
+              }
+
+            },
+
+            "titleWrap": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "alignment": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'left'"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "bold": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "10D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "background": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "0D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "border": [
+
+        {
+
+          "properties": {
+
+            "width": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeader": [
+
+        {
+
+          "properties": {
+
+            "showPinButton": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "showFilterRestatementButton": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualTooltip": [
+
+        {
+
+          "properties": {
+
+            "type": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Default'"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "fontSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "10D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "drillFilterOtherVisuals": true
+
+  },
+
+  "filterConfig": {
+
+    "filters": [
+
+      {
+
+        "name": "25dca08d385e9564b0da",
+
+        "ordinal": 0,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "%_30D_Abandoner"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "70c29e3604cf55add7bc",
+
+        "ordinal": 1,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "%_30D_Dual"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "c796c28245605a373a1f",
+
+        "ordinal": 2,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "%_30D_Exclusive"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "32b91571d3476689bfe7",
+
+        "ordinal": 3,
+
+        "field": {
+
+          "Column": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Calendar"
+
+              }
+
+            },
+
+            "Property": "Date"
+
+          }
+
+        },
+
+        "type": "RelativeDate",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "52dedcd37ac73c3f2350",
+
+        "ordinal": 5,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "Users with Mainland purchase transaction"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "788a4b7a89fd5f258709",
+
+        "ordinal": 6,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "30D_Total_Sample"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      },
+
+      {
+
+        "name": "3e7d0b26a8bfa2c9b408",
+
+        "ordinal": 8,
+
+        "field": {
+
+          "Measure": {
+
+            "Expression": {
+
+              "SourceRef": {
+
+                "Entity": "Measures Folder"
+
+              }
+
+            },
+
+            "Property": "30D_Total_Sample"
+
+          }
+
+        },
+
+        "type": "Advanced",
+
+        "howCreated": "User"
+
+      }
+
+    ],
+
+    "filterSortOrder": "Custom"
+
+  }
+
+}

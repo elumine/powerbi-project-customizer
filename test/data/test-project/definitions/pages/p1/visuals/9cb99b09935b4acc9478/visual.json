@@ -1,0 +1,771 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.11.0/schema.json",
+
+  "name": "9cb99b09935b4acc9478",
+
+  "position": {
+
+    "x": 0,
+
+    "y": 2.087625510016891,
+
+    "z": 1000,
+
+    "height": 53.386699702990747,
+
+    "width": 119.30724665816133,
+
+    "tabOrder": 2000
+
+  },
+
+  "visual": {
+
+    "visualType": "slicer",
+
+    "query": {
+
+      "queryState": {
+
+        "Values": {
+
+          "projections": [
+
+            {
+
+              "field": {
+
+                "Column": {
+
+                  "Expression": {
+
+                    "SourceRef": {
+
+                      "Entity": "UsersQuery"
+
+                    }
+
+                  },
+
+                  "Property": "FIRSTILUMA_TRIPACK"
+
+                }
+
+              },
+
+              "queryRef": "UsersQuery.FIRSTILUMA_TRIPACK",
+
+              "nativeQueryRef": "FIRSTILUMA_TRIPACK",
+
+              "active": true
+
+            }
+
+          ]
+
+        }
+
+      }
+
+    },
+
+    "objects": {
+
+      "data": [
+
+        {
+
+          "properties": {
+
+            "mode": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Dropdown'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "selection": [
+
+        {
+
+          "properties": {
+
+            "selectAllCheckboxEnabled": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "singleSelect": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "items": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI'', wf_segoe-ui_normal, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "textSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "8D"
+
+                }
+
+              }
+
+            },
+
+            "fontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "background": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 0,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "header": [
+
+        {
+
+          "properties": {
+
+            "text": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Tripack'"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'''Segoe UI Semibold'', wf_segoe-ui_semibold, helvetica, arial, sans-serif'"
+
+                }
+
+              }
+
+            },
+
+            "textSize": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "10D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "general": [
+
+        {
+
+          "properties": {}
+
+        }
+
+      ]
+
+    },
+
+    "visualContainerObjects": {
+
+      "border": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 3,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "radius": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "4D"
+
+                }
+
+              }
+
+            },
+
+            "width": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "dropShadow": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "preset": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Custom'"
+
+                }
+
+              }
+
+            },
+
+            "shadowSpread": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            },
+
+            "shadowBlur": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "3D"
+
+                }
+
+              }
+
+            },
+
+            "shadowDistance": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "title": [
+
+        {
+
+          "properties": {
+
+            "titleWrap": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "subTitle": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "background": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0.6
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "50D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualTooltip": [
+
+        {
+
+          "properties": {
+
+            "titleFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "valueFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            },
+
+            "background": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#BFF3F4'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeader": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "foreground": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeaderTooltip": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "syncGroup": {
+
+      "groupName": "CHANNEL",
+
+      "fieldChanges": true,
+
+      "filterChanges": true
+
+    },
+
+    "drillFilterOtherVisuals": true
+
+  },
+
+  "parentGroupName": "d662bf979e4cd7165d05"
+
+}

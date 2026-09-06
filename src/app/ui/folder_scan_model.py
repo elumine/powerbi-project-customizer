@@ -11,6 +11,7 @@ class FolderScanItem:
     path: Path
     display_name: str
     relative_path: str
+    file_type: str = "Json"
 
 
 class FolderScanModel(QAbstractListModel):
@@ -20,6 +21,7 @@ class FolderScanModel(QAbstractListModel):
     DISPLAY_NAME_ROLE = PATH_ROLE + 1
     RELATIVE_PATH_ROLE = PATH_ROLE + 2
     DEPTH_ROLE = PATH_ROLE + 3
+    FILE_TYPE_ROLE = PATH_ROLE + 4
 
     def __init__(self) -> None:
         super().__init__()
@@ -43,6 +45,8 @@ class FolderScanModel(QAbstractListModel):
             return item.relative_path
         if role == self.DEPTH_ROLE:
             return max(0, len(Path(item.relative_path).parts) - 1)
+        if role == self.FILE_TYPE_ROLE:
+            return item.file_type
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -51,6 +55,7 @@ class FolderScanModel(QAbstractListModel):
             self.DISPLAY_NAME_ROLE: QByteArray(b"displayName"),
             self.RELATIVE_PATH_ROLE: QByteArray(b"relativePath"),
             self.DEPTH_ROLE: QByteArray(b"depth"),
+            self.FILE_TYPE_ROLE: QByteArray(b"fileType"),
         }
 
     @property

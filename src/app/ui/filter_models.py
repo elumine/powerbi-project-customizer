@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from PySide6.QtCore import QAbstractListModel, QByteArray, QModelIndex, Qt, Signal
 
@@ -15,6 +15,7 @@ class FilterListModel(QAbstractListModel):
     ACTIVE_ROLE = ID_ROLE + 4
     SOURCE_PATH_ROLE = ID_ROLE + 5
     READ_ONLY_ROLE = ID_ROLE + 6
+    TARGET_FILE_TYPE_ROLE = ID_ROLE + 7
 
     def __init__(self) -> None:
         super().__init__()
@@ -45,6 +46,8 @@ class FilterListModel(QAbstractListModel):
             return content_filter.source_path
         if role == self.READ_ONLY_ROLE:
             return content_filter.is_read_only
+        if role == self.TARGET_FILE_TYPE_ROLE:
+            return content_filter.target_json_file_type
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -56,6 +59,7 @@ class FilterListModel(QAbstractListModel):
             self.ACTIVE_ROLE: QByteArray(b"active"),
             self.SOURCE_PATH_ROLE: QByteArray(b"sourcePath"),
             self.READ_ONLY_ROLE: QByteArray(b"readOnly"),
+            self.TARGET_FILE_TYPE_ROLE: QByteArray(b"targetJsonFileType"),
         }
 
     @property
@@ -141,9 +145,9 @@ class FilterListModel(QAbstractListModel):
     @staticmethod
     def _rule_summary(content_filter: ContentFilter) -> str:
         if not content_filter.rules:
-            return "No rules"
+            return f"{content_filter.target_json_file_type}: No rules"
         parts = [f"{rule.key} {rule.operation} {rule.value}" for rule in content_filter.rules]
-        return "; ".join(parts)
+        return f"{content_filter.target_json_file_type}: " + "; ".join(parts)
 
 
 class RuleListModel(QAbstractListModel):

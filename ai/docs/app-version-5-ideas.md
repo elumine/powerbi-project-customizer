@@ -1,6 +1,15 @@
 This file describes application v5 features.
 
+# Goals
+- this version introcudes some ux updates like files import/export, application restart, etc..
+- and transforms app from simple text exitor to editor of Power BI project files (visuals and pages)
+- goal is to make seample easy to use ui to edit visuals across Power BI project
+- see microsoft documentation on file formats: 
+  - https://developer.microsoft.com/json-schemas/fabric/item/report/definition/
+  - https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.9.0/schema.json
+
 # Updates
+
 ## Bugs
 - user cant save files after enabling/disabling filters
 ## Json files can have types

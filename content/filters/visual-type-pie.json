@@ -1,0 +1,13 @@
+﻿{
+    "id":  "builtin.filter.visual-type-pie",
+    "displayName":  "Pie visuals",
+    "targetJsonFileType":  "Visual",
+    "color":  "#c586c0",
+    "rules":  [
+        {
+            "operation":  "includes",
+            "key":  "visualType",
+            "value":  "Pie"
+        }
+    ]
+}

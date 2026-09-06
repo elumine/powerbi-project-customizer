@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -21,10 +21,10 @@ class MacroRepository:
         if not folder.exists() or not folder.is_dir():
             return []
 
-        macros = [self._load_file(path) for path in sorted(folder.rglob("*.json"), key=lambda item: str(item).casefold())]
+        macros = [self.load_macro_file(path) for path in sorted(folder.rglob("*.json"), key=lambda item: str(item).casefold())]
         return macros
 
-    def _load_file(self, path: Path) -> MacroItem:
+    def load_macro_file(self, path: Path) -> MacroItem:
         macro_id = self._macro_id(path, {})
         try:
             data = json.loads(path.read_text(encoding="utf-8-sig"))
@@ -68,6 +68,11 @@ class MacroRepository:
             validation_errors=list(load_errors),
         )
 
+    @staticmethod
+    def export_macro(path: Path, macro: MacroItem) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(macro.to_export_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+
     def _step_from_data(self, macro_id: str, index: int, data: Any) -> tuple[MacroStep, list[str]]:
         step_id = f"{macro_id}.step.{index + 1}"
         if not isinstance(data, dict):
@@ -79,15 +84,20 @@ class MacroRepository:
             errors.append(f"Step {index + 1}: unknown step type '{step_type}'.")
         if step_type == "search-and-replace" and "replaceValue" not in data:
             errors.append(f"Step {index + 1}: replaceValue is required.")
+        if step_type == "visual-editor-change" and "value" not in data:
+            errors.append(f"Step {index + 1}: value is required.")
 
         return (
             MacroStep(
                 id=step_id,
                 type=step_type,
                 filter_name=str(data.get("filterName", "")).strip(),
+                filter_id=str(data.get("filterId", "")).strip(),
                 search_value=str(data.get("searchValue", "")),
                 replace_value=str(data.get("replaceValue", "")),
                 has_replace_value="replaceValue" in data,
+                control_id=str(data.get("controlId", "")).strip(),
+                value=data.get("value", ""),
             ),
             errors,
         )

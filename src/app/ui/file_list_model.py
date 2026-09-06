@@ -26,6 +26,15 @@ class FileListModel(QAbstractListModel):
     ID_ROLE = PATH_ROLE + 11
     ACTIVE_ROLE = PATH_ROLE + 12
     ACTIVE_FILTER_COLOR_ROLE = PATH_ROLE + 13
+    FILE_TYPE_ROLE = PATH_ROLE + 14
+    RELATIVE_PATH_ROLE = PATH_ROLE + 15
+    PARENT_PAGE_ID_ROLE = PATH_ROLE + 16
+    VISUAL_TYPE_ROLE = PATH_ROLE + 17
+    VISIBLE_IN_TREE_ROLE = PATH_ROLE + 18
+    SCHEMA_URL_ROLE = PATH_ROLE + 19
+    PBIR_NAME_ROLE = PATH_ROLE + 20
+    DISPLAY_NAME_SOURCE_ROLE = PATH_ROLE + 21
+    EXPANDED_ROLE = PATH_ROLE + 22
 
     def __init__(self) -> None:
         super().__init__()
@@ -68,7 +77,25 @@ class FileListModel(QAbstractListModel):
         if role == self.ACTIVE_ROLE:
             return document.is_active
         if role == self.ACTIVE_FILTER_COLOR_ROLE:
-            return getattr(document, "active_filter_color", "")
+            return document.active_filter_color
+        if role == self.FILE_TYPE_ROLE:
+            return document.file_type_text
+        if role == self.RELATIVE_PATH_ROLE:
+            return document.relative_path
+        if role == self.PARENT_PAGE_ID_ROLE:
+            return document.parent_page_id
+        if role == self.VISUAL_TYPE_ROLE:
+            return document.visual_type
+        if role == self.VISIBLE_IN_TREE_ROLE:
+            return document.visible_in_tree
+        if role == self.SCHEMA_URL_ROLE:
+            return document.schema_url
+        if role == self.PBIR_NAME_ROLE:
+            return document.pbir_name
+        if role == self.DISPLAY_NAME_SOURCE_ROLE:
+            return document.display_name_source
+        if role == self.EXPANDED_ROLE:
+            return not document.collapsed
 
         return None
 
@@ -88,6 +115,15 @@ class FileListModel(QAbstractListModel):
             self.ID_ROLE: QByteArray(b"id"),
             self.ACTIVE_ROLE: QByteArray(b"activeFile"),
             self.ACTIVE_FILTER_COLOR_ROLE: QByteArray(b"activeFilterColor"),
+            self.FILE_TYPE_ROLE: QByteArray(b"fileType"),
+            self.RELATIVE_PATH_ROLE: QByteArray(b"relativePath"),
+            self.PARENT_PAGE_ID_ROLE: QByteArray(b"parentPageId"),
+            self.VISUAL_TYPE_ROLE: QByteArray(b"visualType"),
+            self.VISIBLE_IN_TREE_ROLE: QByteArray(b"visibleInTree"),
+            self.SCHEMA_URL_ROLE: QByteArray(b"schemaUrl"),
+            self.PBIR_NAME_ROLE: QByteArray(b"pbirName"),
+            self.DISPLAY_NAME_SOURCE_ROLE: QByteArray(b"displayNameSource"),
+            self.EXPANDED_ROLE: QByteArray(b"expanded"),
         }
 
     @property
@@ -104,6 +140,12 @@ class FileListModel(QAbstractListModel):
         if not 0 <= row < len(self._documents):
             return None
         return self._documents[row]
+
+    def document_index_by_id(self, document_id: str) -> int:
+        for row, document in enumerate(self._documents):
+            if document.id == document_id:
+                return row
+        return -1
 
     def add_document(self, document: JsonDocument) -> int:
         row = len(self._documents)
@@ -123,6 +165,14 @@ class FileListModel(QAbstractListModel):
         self.countChanged.emit()
         return document
 
+    def clear(self) -> None:
+        if not self._documents:
+            return
+        self.beginResetModel()
+        self._documents = []
+        self.endResetModel()
+        self.countChanged.emit()
+
     def set_document_text(self, row: int, text: str) -> bool:
         document = self.document_at(row)
         if document is None or document.text == text:
@@ -141,17 +191,55 @@ class FileListModel(QAbstractListModel):
         self._emit_row_changed(row)
 
     def set_document_active(self, row: int, active: bool, filter_color: str = "") -> None:
+        self.set_document_state(row, active, active, filter_color)
+
+    def set_document_state(self, row: int, active: bool, visible: bool, filter_color: str = "") -> None:
         document = self.document_at(row)
         if document is None:
             return
 
-        if document.is_active == active and getattr(document, "active_filter_color", "") == filter_color:
+        if (
+            document.is_active == active
+            and document.visible_in_tree == visible
+            and document.active_filter_color == filter_color
+        ):
             return
         document.is_active = active
+        document.visible_in_tree = visible
         document.active_filter_color = filter_color
         model_index = self.index(row, 0)
-        self.dataChanged.emit(model_index, model_index, [self.ACTIVE_ROLE, self.ACTIVE_FILTER_COLOR_ROLE])
+        self.dataChanged.emit(
+            model_index,
+            model_index,
+            [self.ACTIVE_ROLE, self.VISIBLE_IN_TREE_ROLE, self.ACTIVE_FILTER_COLOR_ROLE],
+        )
         self.documentChanged.emit(row)
+
+    def set_page_expanded(self, document_id: str, expanded: bool) -> bool:
+        row = self.document_index_by_id(document_id)
+        document = self.document_at(row)
+        if document is None:
+            return False
+        collapsed = not bool(expanded)
+        if document.collapsed == collapsed:
+            return False
+        document.collapsed = collapsed
+        self._emit_row_changed(row)
+        return True
+
+    def refresh_row(self, row: int) -> None:
+        if not 0 <= row < len(self._documents):
+            return
+        self._emit_row_changed(row)
+
+    def refresh_all(self) -> None:
+        if not self._documents:
+            return
+        top = self.index(0, 0)
+        bottom = self.index(len(self._documents) - 1, 0)
+        self.dataChanged.emit(top, bottom)
+        for row in range(len(self._documents)):
+            self.documentChanged.emit(row)
 
     def refresh_search_view(self, row: int, match_count: int, previews: list[dict[str, str | int]], highlighted_html: str) -> None:
         document = self.document_at(row)
@@ -187,6 +275,15 @@ class FileListModel(QAbstractListModel):
                 self.ID_ROLE,
                 self.ACTIVE_ROLE,
                 self.ACTIVE_FILTER_COLOR_ROLE,
+                self.FILE_TYPE_ROLE,
+                self.RELATIVE_PATH_ROLE,
+                self.PARENT_PAGE_ID_ROLE,
+                self.VISUAL_TYPE_ROLE,
+                self.VISIBLE_IN_TREE_ROLE,
+                self.SCHEMA_URL_ROLE,
+                self.PBIR_NAME_ROLE,
+                self.DISPLAY_NAME_SOURCE_ROLE,
+                self.EXPANDED_ROLE,
             ],
         )
         self.documentChanged.emit(row)

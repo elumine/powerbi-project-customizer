@@ -1,0 +1,433 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+
+  "name": "994cb0c39565bcb2e98a",
+
+  "position": {
+
+    "x": 1085,
+
+    "y": 168.33333333333334,
+
+    "z": 12000,
+
+    "height": 35,
+
+    "width": 171.66666666666669,
+
+    "tabOrder": 10000
+
+  },
+
+  "visual": {
+
+    "visualType": "textbox",
+
+    "objects": {
+
+      "general": [
+
+        {
+
+          "properties": {
+
+            "paragraphs": [
+
+              {
+
+                "textRuns": [
+
+                  {
+
+                    "value": ""
+
+                  }
+
+                ]
+
+              }
+
+            ]
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "visualContainerObjects": {
+
+      "title": [
+
+        {
+
+          "properties": {
+
+            "titleWrap": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "subTitle": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "background": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "0D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "general": [
+
+        {
+
+          "properties": {
+
+            "keepLayerOrder": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "border": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "width": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "dropShadow": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualTooltip": [
+
+        {
+
+          "properties": {
+
+            "titleFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "valueFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            },
+
+            "background": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#BFF3F4'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeader": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "foreground": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeaderTooltip": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "drillFilterOtherVisuals": true
+
+  }
+
+}

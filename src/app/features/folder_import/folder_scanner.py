@@ -1,11 +1,11 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from app.core.display_name import display_name_from_json_text
 from app.core.file_service import FileService, FileServiceError
+from app.core.powerbi_metadata import classify_json_file, display_name_for_document, load_json_for_metadata, relative_path_for_display
 from app.ui.folder_scan_model import FolderScanItem
 
 
@@ -18,9 +18,18 @@ class FolderScanResult:
 
 
 class FolderScanner:
-    """Finds importable visual.json files under selected roots."""
+    """Find importable Power BI page.json and visual.json files under selected roots."""
 
-    TARGET_FILE_NAME = "visual.json"
+    TARGET_FILE_NAMES = {"page.json", "visual.json"}
+    SKIPPED_DIRECTORIES = {".pbi", "__pycache__", ".git"}
+    SKIPPED_FILE_NAMES = {
+        ".platform",
+        "cache.abf",
+        "localsettings.json",
+        "mobilestate.json",
+        "report.json",
+        "semanticmodeldiagramlayout.json",
+    }
 
     def scan(self, roots: list[Path], existing_paths: set[Path] | None = None) -> FolderScanResult:
         existing = set(existing_paths or set())
@@ -30,19 +39,21 @@ class FolderScanner:
         for root in roots:
             root_path = root.expanduser().resolve()
             if root_path.is_file():
-                self._append_file(root_path, root_path.parent, existing, seen, result)
+                self._append_file(root_path, root_path.parent, existing, seen, result, allow_loose=True)
                 continue
             if not root_path.is_dir():
                 result.errors.append(f"{root_path} is not a folder.")
                 continue
 
-            for current_root, _directories, files in os.walk(
+            for current_root, directories, files in os.walk(
                 root_path,
                 onerror=lambda error: result.errors.append(str(error)),
             ):
-                if self.TARGET_FILE_NAME not in files:
-                    continue
-                self._append_file(Path(current_root) / self.TARGET_FILE_NAME, root_path, existing, seen, result)
+                directories[:] = [directory for directory in directories if directory.casefold() not in self.SKIPPED_DIRECTORIES]
+                for file_name in files:
+                    if file_name.casefold() not in self.TARGET_FILE_NAMES:
+                        continue
+                    self._append_file(Path(current_root) / file_name, root_path, existing, seen, result)
 
         result.items.sort(key=lambda item: item.relative_path.casefold())
         return result
@@ -54,37 +65,49 @@ class FolderScanner:
         existing_paths: set[Path],
         seen_paths: set[Path],
         result: FolderScanResult,
+        allow_loose: bool = False,
     ) -> None:
         resolved = file_path.expanduser().resolve()
-        if resolved.name.casefold() != self.TARGET_FILE_NAME:
+        if resolved.name.casefold() in self.SKIPPED_FILE_NAMES:
+            return
+        if resolved.suffix.casefold() != ".json":
+            return
+        if resolved.name.casefold() not in self.TARGET_FILE_NAMES and not allow_loose:
             return
         if resolved in existing_paths or resolved in seen_paths:
             result.skipped_duplicates += 1
             return
 
+        data = self._json_data(resolved)
+        file_type = classify_json_file(resolved, data)
+        if file_type is None and not allow_loose:
+            return
+
         seen_paths.add(resolved)
+        display_name, _source = display_name_for_document(resolved, data, file_type, resolved.name)
         result.items.append(
             FolderScanItem(
                 path=resolved,
-                display_name=self._display_name(resolved),
+                display_name=display_name,
                 relative_path=self._relative_path(resolved, scan_root),
+                file_type=file_type.value if file_type is not None else "Json",
             )
         )
 
     @staticmethod
-    def _display_name(path: Path) -> str:
+    def _json_data(path: Path):
         try:
             text = FileService.read_text(path)
         except FileServiceError:
-            return path.name
-        return display_name_from_json_text(text, path.name)
+            return None
+        return load_json_for_metadata(text)
 
     @staticmethod
     def _relative_path(path: Path, root: Path) -> str:
         try:
-            return str(path.relative_to(root))
+            return str(path.relative_to(root)).replace("\\", "/")
         except ValueError:
-            return path.name
+            return relative_path_for_display(path)
 
     @staticmethod
     def _root_label(roots: list[Path]) -> str:

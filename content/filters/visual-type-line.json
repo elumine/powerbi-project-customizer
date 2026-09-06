@@ -1,0 +1,13 @@
+﻿{
+    "id":  "builtin.filter.visual-type-line",
+    "displayName":  "Line visuals",
+    "targetJsonFileType":  "Visual",
+    "color":  "#dcdcaa",
+    "rules":  [
+        {
+            "operation":  "includes",
+            "key":  "visualType",
+            "value":  "Line"
+        }
+    ]
+}

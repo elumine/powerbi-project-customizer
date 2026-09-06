@@ -1,0 +1,629 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+
+  "name": "23d1ead9aeddc864ed1a",
+
+  "position": {
+
+    "x": 0,
+
+    "y": 93.092783505154642,
+
+    "z": 1000,
+
+    "height": 76.838487972508588,
+
+    "width": 1279.6563573883161,
+
+    "tabOrder": 12000
+
+  },
+
+  "visual": {
+
+    "visualType": "shape",
+
+    "objects": {
+
+      "shape": [
+
+        {
+
+          "properties": {
+
+            "tileShape": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'rectangle'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "rotation": [
+
+        {
+
+          "properties": {
+
+            "shapeAngle": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "0L"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "outline": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "fill": [
+
+        {
+
+          "properties": {
+
+            "fillColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#D9DDE1'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "0D"
+
+                }
+
+              }
+
+            }
+
+          },
+
+          "selector": {
+
+            "id": "default"
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "visualContainerObjects": {
+
+      "title": [
+
+        {
+
+          "properties": {
+
+            "titleWrap": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "subTitle": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "background": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 2,
+
+                      "Percent": 0.6
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "transparency": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "50D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "border": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "color": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "ThemeDataColor": {
+
+                      "ColorId": 3,
+
+                      "Percent": 0
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "radius": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "4D"
+
+                }
+
+              }
+
+            },
+
+            "width": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "dropShadow": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "preset": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Custom'"
+
+                }
+
+              }
+
+            },
+
+            "shadowSpread": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            },
+
+            "shadowBlur": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "3D"
+
+                }
+
+              }
+
+            },
+
+            "shadowDistance": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "1D"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualTooltip": [
+
+        {
+
+          "properties": {
+
+            "titleFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "valueFontColor": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            },
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            },
+
+            "background": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#BFF3F4'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeader": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "false"
+
+                }
+
+              }
+
+            },
+
+            "foreground": {
+
+              "solid": {
+
+                "color": {
+
+                  "expr": {
+
+                    "Literal": {
+
+                      "Value": "'#44546A'"
+
+                    }
+
+                  }
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ],
+
+      "visualHeaderTooltip": [
+
+        {
+
+          "properties": {
+
+            "fontFamily": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'IQOS W02'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "drillFilterOtherVisuals": true
+
+  },
+
+  "howCreated": "InsertVisualButton"
+
+}

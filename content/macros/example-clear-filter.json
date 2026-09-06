@@ -1,0 +1,9 @@
+﻿{
+  "id": "builtin.macro.example-clear-filter",
+  "name": "Example clear filter",
+  "steps": [
+    {
+      "type": "filter-clear"
+    }
+  ]
+}

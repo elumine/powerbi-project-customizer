@@ -1,0 +1,125 @@
+{
+
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.10.0/schema.json",
+
+  "name": "cdb781e070e6d7b67618",
+
+  "position": {
+
+    "x": 1226.5074307632954,
+
+    "y": 24.562899147462524,
+
+    "z": 3000,
+
+    "height": 52.400851514586712,
+
+    "width": 49.125798294925048,
+
+    "tabOrder": 9000
+
+  },
+
+  "visual": {
+
+    "visualType": "image",
+
+    "objects": {
+
+      "general": [
+
+        {
+
+          "properties": {
+
+            "imageUrl": {
+
+              "expr": {
+
+                "ResourcePackageItem": {
+
+                  "PackageName": "RegisteredResources",
+
+                  "PackageType": 1,
+
+                  "ItemName": "warning-icon5206547328535309.png"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "visualContainerObjects": {
+
+      "visualLink": [
+
+        {
+
+          "properties": {
+
+            "show": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "true"
+
+                }
+
+              }
+
+            },
+
+            "type": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'Bookmark'"
+
+                }
+
+              }
+
+            },
+
+            "bookmark": {
+
+              "expr": {
+
+                "Literal": {
+
+                  "Value": "'c0826403e8d260b40323'"
+
+                }
+
+              }
+
+            }
+
+          }
+
+        }
+
+      ]
+
+    },
+
+    "drillFilterOtherVisuals": true
+
+  },
+
+  "howCreated": "InsertVisualButton"
+
+}
