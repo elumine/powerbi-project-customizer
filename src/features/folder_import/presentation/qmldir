@@ -1,0 +1,2 @@
+module features.folder_import.presentation
+FolderImportDialog 1.0 component/FolderImportDialog/FolderImportDialog.qml

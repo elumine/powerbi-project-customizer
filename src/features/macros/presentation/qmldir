@@ -1,0 +1,2 @@
+module features.macros.presentation
+MacrosPanel 1.0 component/MacrosPanel/MacrosPanel.qml

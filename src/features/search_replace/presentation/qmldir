@@ -1,0 +1,2 @@
+module features.search_replace.presentation
+SearchPanel 1.0 component/SearchPanel/SearchPanel.qml

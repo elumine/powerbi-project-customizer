@@ -1,15 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from PyInstaller.building.datastruct import Tree
+
+ui_resources = Tree("src/ui", prefix="ui", excludes=["__pycache__", "*.py", "*.pyc"])
+feature_qml_resources = Tree("src/features", prefix="features", excludes=["__pycache__", "*.py", "*.pyc"])
 
 a = Analysis(
     ["src/main.py"],
     pathex=["src"],
     binaries=[],
-    datas=[
-        ("src/app/ui/qml", "app/ui/qml"),
-        ("src/app/ui/styles", "app/ui/styles"),
-        ("content", "content"),
-    ],
+    datas=[("content", "content")] + ui_resources + feature_qml_resources,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

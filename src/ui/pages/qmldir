@@ -1,0 +1,3 @@
+module ui.pages
+FilePickerPage 1.0 FilePickerPage/FilePickerPage.qml
+WorkspacePage 1.0 WorkspacePage/WorkspacePage.qml

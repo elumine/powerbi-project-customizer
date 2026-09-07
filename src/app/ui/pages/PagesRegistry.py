@@ -1,1 +1,0 @@
-# class to hold map<name, widget> of pages

@@ -1,0 +1,2 @@
+module features.editor.presentation
+JsonEditor 1.0 component/JsonEditor/JsonEditor.qml

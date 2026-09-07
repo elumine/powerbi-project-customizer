@@ -1,0 +1,4 @@
+module ui.component.shell
+AppHeader 1.0 AppHeader/AppHeader.qml
+StartAgainDialog 1.0 StartAgainDialog/StartAgainDialog.qml
+PanelsSidebar 1.0 PanelsSidebar/PanelsSidebar.qml

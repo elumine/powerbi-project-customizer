@@ -1,1 +1,0 @@
-"""Feature-sliced application modules."""

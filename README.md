@@ -1,11 +1,11 @@
 # JSON Multi Editor
 
-Desktop JSON multi-file editor built with Python, PySide6, QML, and Qt styling.
+Desktop JSON multi-file editor built with Python, PySide6, QML, and Qt styling. The source is organized into entities, feature slices, reusable services, infrastructure adapters, bootstrap composition, and component-based QML modules.
 
 ## Features
 
 - Open multiple JSON files by picker or drag and drop.
-- Import folders recursively through a modal scan that includes only files named `visual.json`.
+- Import folders recursively through a modal scan of every supported, non-skipped `.json` file, including pages, visuals, and generic JSON.
 - Display friendly file names from JSON content keys: `name`, `Name`, `Title`, or `title`.
 - Edit files in vertical expand/collapse accordions.
 - Search and replace across JSON text, including both keys and values.
@@ -36,6 +36,13 @@ tools\dev.cmd
 
 ```cmd
 tools\dev.cmd --smoke-test
+```
+
+## Unit and architecture checks
+
+```cmd
+set PYTHONPATH=src && python -m unittest discover -s test\unit
+set PYTHONPATH=src && python -m unittest discover -s test\architecture
 ```
 
 ## Build

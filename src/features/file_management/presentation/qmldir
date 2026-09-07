@@ -1,0 +1,2 @@
+module features.file_management.presentation
+ProjectExplorerPanel 1.0 component/ProjectExplorerPanel/ProjectExplorerPanel.qml

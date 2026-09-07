@@ -1,0 +1,2 @@
+module features.suggestions.presentation
+SuggestionsPanel 1.0 component/SuggestionsPanel/SuggestionsPanel.qml

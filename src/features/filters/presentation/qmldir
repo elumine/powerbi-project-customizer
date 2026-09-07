@@ -1,0 +1,3 @@
+module features.filters.presentation
+FilterEditorDialog 1.0 component/FilterEditorDialog/FilterEditorDialog.qml
+FilterPanel 1.0 component/FilterPanel/FilterPanel.qml

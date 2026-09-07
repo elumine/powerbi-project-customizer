@@ -1,0 +1,2 @@
+module features.visual_editor.presentation
+VisualEditorPanel 1.0 component/VisualEditorPanel/VisualEditorPanel.qml

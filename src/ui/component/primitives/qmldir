@@ -1,0 +1,9 @@
+module ui.component.primitives
+ChromeButton 1.0 ChromeButton/ChromeButton.qml
+IconButton 1.0 IconButton/IconButton.qml
+PanelButton 1.0 PanelButton/PanelButton.qml
+PanelTitle 1.0 PanelTitle/PanelTitle.qml
+MutedLabel 1.0 MutedLabel/MutedLabel.qml
+Field 1.0 Field/Field.qml
+DarkCombo 1.0 DarkCombo/DarkCombo.qml
+DiffChip 1.0 DiffChip/DiffChip.qml
