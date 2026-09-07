@@ -1,4 +1,4 @@
-﻿import QtQuick
+import QtQuick
 import QtQuick.Controls
 import QtQml
 import QtQuick.Layouts
@@ -69,6 +69,8 @@ ApplicationWindow {
         property int activeMatchFileIndex: root.controller ? root.controller.activeMatchFileIndex : -1
         property int activeMatchIndex: root.controller ? root.controller.activeMatchIndex : -1
         property int activeMatchLine: root.controller ? root.controller.activeMatchLine : 0
+        property int activeMatchStart: root.controller ? root.controller.activeMatchStart : -1
+        property int activeMatchEnd: root.controller ? root.controller.activeMatchEnd : -1
         property int activeMatchDisplayIndex: root.controller ? root.controller.activeMatchDisplayIndex : 0
         property int activeMatchFileCount: root.controller ? root.controller.activeMatchFileCount : 0
         property int totalMatches: root.controller ? root.controller.totalMatches : 0
@@ -91,6 +93,7 @@ ApplicationWindow {
         property bool filterEditorVisible: root.controller ? root.controller.filterEditorVisible : false
         property bool editingFilterCanSave: root.controller ? root.controller.editingFilterCanSave : false
         property bool anyMacroRunning: root.controller ? root.controller.anyMacroRunning : false
+        property bool macroRecording: root.controller ? root.controller.macroRecording : false
         property var fileModel: root.controller ? root.controller.fileModel : null
         property var projectTreeModel: root.controller ? root.controller.projectTreeModel : null
         property var folderScanModel: root.controller ? root.controller.folderScanModel : null
@@ -101,9 +104,12 @@ ApplicationWindow {
         property var editingRuleModel: root.controller ? root.controller.editingRuleModel : null
         property var visualEditorControlModel: root.controller ? root.controller.visualEditorControlModel : null
         property var historyModel: root.controller ? root.controller.historyModel : null
+        property var searchResultModel: root.controller ? root.controller.searchResultModel : null
     }
 
     function callController(action) { if (root.controller) action(root.controller) }
+    function lineNumbers(value) { var count = Math.max(1, String(value || "").split("\n").length); var lines = []; for (var i = 1; i <= count; i++) lines.push(i); return lines.join("\n") }
+    function lineOffset(value, line) { var text = String(value || ""); var target = Math.max(1, line); var current = 1; for (var i = 0; i < text.length; i++) { if (current === target) return i; if (text.charAt(i) === "\n") current++; } return text.length }
     function visualEditorOptionIndex(options, value) {
         for (var i = 0; i < options.length; i++) {
             var option = options[i]
@@ -131,6 +137,7 @@ ApplicationWindow {
 
     Shortcut { sequences: [StandardKey.Save]; onActivated: root.callController(function(c) { c.saveFile(appState.currentIndex) }) }
     Shortcut { sequence: "Ctrl+Shift+S"; onActivated: root.callController(function(c) { c.saveAll() }) }
+    Shortcut { sequences: [StandardKey.Find]; onActivated: { editorFindBar.visible = true; editorFindField.forceActiveFocus() } }
 
     component ChromeButton: Button {
         id: control
@@ -236,6 +243,7 @@ ApplicationWindow {
             Text { text: "Power BI PBIR Editor"; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 13; font.bold: true; Layout.fillWidth: true; elide: Text.ElideRight }
             Text { text: appState.hasActiveFilter ? appState.activeFilterName + " (" + appState.activeFilterTarget + ")" : ""; color: appState.activeFilterColor.length > 0 ? appState.activeFilterColor : root.mutedText; font.family: "Segoe UI"; font.pixelSize: 12; visible: appState.hasActiveFilter }
             Text { text: appState.hasDirtyFiles ? "Unsaved changes" : "All saved"; color: appState.hasDirtyFiles ? root.warningColor : root.mutedText; font.family: "Segoe UI"; font.pixelSize: 12 }
+            ChromeButton { text: appState.anyMacroRunning ? "Stop macro" : appState.macroRecording ? "Stop recording" : "Start recording"; normalColor: appState.anyMacroRunning || appState.macroRecording ? root.accentRed : root.accentGreen; hoverColor: appState.anyMacroRunning || appState.macroRecording ? "#d65252" : root.accentGreenHover; enabled: true; onClicked: appState.anyMacroRunning ? root.callController(function(c) { c.stopMacro() }) : appState.macroRecording ? root.callController(function(c) { c.stopMacroRecording() }) : root.callController(function(c) { c.startMacroRecording() }) }
             ChromeButton { text: "Start Again"; normalColor: "#3c3c3c"; hoverColor: "#4a4a4a"; onClicked: appState.hasDirtyFiles ? startAgainDialog.open() : root.callController(function(c) { c.startAgain() }) }
         }
     }
@@ -269,6 +277,7 @@ ApplicationWindow {
                             Text { text: appState.fileCount + " file(s)"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 12 }
                         }
                         ListView { Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 1; model: appState.fileModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                             delegate: Rectangle { width: parent ? parent.width : 0; height: 44; color: "transparent"; opacity: visibleInTree ? 1.0 : 0.4
                                 RowLayout { anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 4; spacing: 8
                                     Rectangle { Layout.preferredWidth: 8; Layout.preferredHeight: 8; radius: 4; color: activeFilterColor.length > 0 ? activeFilterColor : "transparent" }
@@ -286,7 +295,7 @@ ApplicationWindow {
 
         Item {
             RowLayout { anchors.fill: parent; spacing: 0
-                Rectangle { Layout.preferredWidth: 52; Layout.fillHeight: true; color: root.activityBackground
+                Rectangle { Layout.preferredWidth: Math.max(52, Math.min(110, root.width * 0.10)); Layout.fillHeight: true; color: root.activityBackground
                     ColumnLayout { anchors.fill: parent; spacing: 0
                         PanelButton { text: "E"; tooltipText: "Explorer"; active: root.activePanel === "explorer"; onClicked: root.activePanel = "explorer" }
                         PanelButton { text: "S"; tooltipText: "Search"; active: root.activePanel === "search"; onClicked: root.activePanel = "search" }
@@ -299,7 +308,7 @@ ApplicationWindow {
                     }
                 }
 
-                Rectangle { Layout.preferredWidth: 340; Layout.fillHeight: true; color: root.panelBackground; border.color: root.borderColor
+                Rectangle { Layout.preferredWidth: Math.max(420, Math.min(680, root.width * 0.50)); Layout.fillHeight: true; color: root.panelBackground; border.color: root.borderColor
                     StackLayout { anchors.fill: parent; anchors.margins: 10; currentIndex: root.panelIndex()
                         ColumnLayout { spacing: 8
                             RowLayout {
@@ -313,6 +322,7 @@ ApplicationWindow {
                             }
                             ChromeButton { Layout.fillWidth: true; text: "Save all"; enabled: appState.hasDirtyFiles; onClicked: root.callController(function(c) { c.saveAll() }) }
                             ListView { id: projectTree; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 2; model: appState.projectTreeModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                                 delegate: Rectangle { width: projectTree.width; height: 48; color: fileIndex === appState.currentIndex ? root.listActive : rowMouse.containsMouse ? root.listHover : "transparent"; opacity: activeFile || containerOnly ? 1.0 : 0.55
                                     MouseArea { id: rowMouse; anchors.fill: parent; hoverEnabled: true; onClicked: root.callController(function(c) { c.selectTreeRow(index) }) }
                                     RowLayout { anchors.fill: parent; anchors.leftMargin: 6 + depth * 18; anchors.rightMargin: 4; spacing: 6
@@ -344,12 +354,13 @@ ApplicationWindow {
                                 IconButton { text: "v"; enabled: appState.totalMatches > 0; ToolTip.visible: hovered; ToolTip.text: "Next match"; onClicked: root.callController(function(c) { c.navigateNextMatch() }) }
                                 Text { Layout.fillWidth: true; text: appState.totalMatches + " match(es) in active files"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 12; elide: Text.ElideRight }
                             }
-                            ListView { Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: appState.fileModel; spacing: 5
-                                delegate: Rectangle { width: parent ? parent.width : 0; height: activeFile && matchCount > 0 ? 58 : 0; visible: activeFile && matchCount > 0; color: root.editorBackground; border.color: root.borderColor; radius: 3
-                                    MouseArea { anchors.fill: parent; onClicked: root.callController(function(c) { c.currentIndex = index; c.navigateToMatch(index, 0) }) }
+                            ListView { id: searchResultList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: appState.searchResultModel; spacing: 5
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                delegate: Rectangle { width: searchResultList.width; height: 44; color: root.editorBackground; border.color: root.borderColor; radius: 3
+                                    MouseArea { anchors.fill: parent; onClicked: root.callController(function(c) { c.navigateToMatch(fileIndex, matchIndex) }) }
                                     ColumnLayout { anchors.fill: parent; anchors.margins: 6; spacing: 2
-                                        Text { Layout.fillWidth: true; text: name + " - " + matchCount + " match(es)"; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 12; elide: Text.ElideMiddle }
-                                        Text { Layout.fillWidth: true; text: relativePath; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 10; elide: Text.ElideMiddle }
+                                        Text { Layout.fillWidth: true; text: displayText; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 12; elide: Text.ElideMiddle }
+                                        Text { Layout.fillWidth: true; text: "match " + (matchIndex + 1) + " at offset " + start; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideMiddle }
                                     }
                                 }
                             }
@@ -366,24 +377,8 @@ ApplicationWindow {
                                 ChromeButton { Layout.fillWidth: true; text: "Reload"; onClicked: root.callController(function(c) { c.reloadContent() }) }
                                 ChromeButton { Layout.fillWidth: true; text: "Clear"; enabled: appState.hasActiveFilter; onClicked: root.callController(function(c) { c.deactivateFilter() }) }
                             }
-                            Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 96; color: root.editorBackground; border.color: root.borderColor; radius: 3
-                                ColumnLayout { anchors.fill: parent; anchors.margins: 8; spacing: 6
-                                    PanelTitle { text: "DYNAMIC" }
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        property string pageFilterText: ""
-                                        Field { Layout.fillWidth: true; placeholderText: "Page name"; onTextEdited: parent.pageFilterText = text }
-                                        ChromeButton { text: "Apply"; enabled: parent.pageFilterText.length > 0; onClicked: root.callController(function(c) { c.applyDynamicPageNameFilter(parent.pageFilterText) }) }
-                                    }
-                                    RowLayout {
-                                        Layout.fillWidth: true
-                                        property string visualFilterText: ""
-                                        Field { Layout.fillWidth: true; placeholderText: "Visual type"; onTextEdited: parent.visualFilterText = text }
-                                        ChromeButton { text: "Apply"; enabled: parent.visualFilterText.length > 0; onClicked: root.callController(function(c) { c.applyDynamicVisualTypeFilter(parent.visualFilterText) }) }
-                                    }
-                                }
-                            }
                             ListView { id: filterList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: appState.filterModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                                 delegate: Rectangle { width: filterList.width; height: 88; color: active ? root.listActive : filterMouse.containsMouse ? root.listHover : root.editorBackground; border.color: active ? color : root.borderColor; radius: 4
                                     MouseArea { id: filterMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                     ColumnLayout { anchors.fill: parent; anchors.margins: 7; spacing: 4
@@ -410,12 +405,14 @@ ApplicationWindow {
                             PanelTitle { text: "SUGGESTIONS" }
                             Text { Layout.fillWidth: true; text: appState.suggestionKeyCount + " key duplicate(s), " + appState.suggestionValueCount + " value duplicate(s)"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 12 }
                             ListView { Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: appState.suggestionKeyModel; spacing: 4
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                                 delegate: Rectangle { width: parent ? parent.width : 0; height: 36; color: suggestionColor; radius: 3
                                     MouseArea { anchors.fill: parent; onClicked: root.callController(function(c) { c.openSuggestionSearch("key", index) }) }
                                     Text { anchors.fill: parent; anchors.margins: 7; text: duplicationValue + " : " + duplicationCount; color: "#ffffff"; font.family: "Consolas"; font.pixelSize: 12; elide: Text.ElideRight; verticalAlignment: Text.AlignVCenter }
                                 }
                             }
                             ListView { Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: appState.suggestionValueModel; spacing: 4
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                                 delegate: Rectangle { width: parent ? parent.width : 0; height: 36; color: suggestionColor; radius: 3
                                     MouseArea { anchors.fill: parent; onClicked: root.callController(function(c) { c.openSuggestionSearch("value", index) }) }
                                     Text { anchors.fill: parent; anchors.margins: 7; text: duplicationValue + " : " + duplicationCount; color: "#ffffff"; font.family: "Consolas"; font.pixelSize: 12; elide: Text.ElideRight; verticalAlignment: Text.AlignVCenter }
@@ -432,14 +429,49 @@ ApplicationWindow {
                             DarkCombo { Layout.fillWidth: true; model: appState.visualEditorCategoryOptions; currentIndex: root.visualEditorOptionIndex(appState.visualEditorCategoryOptions, appState.visualEditorCategory); onActivated: { var option = appState.visualEditorCategoryOptions[index]; if (optionEnabled(option)) root.callController(function(c) { c.setVisualEditorCategory(optionValue(option)) }) } }
                             MutedLabel { Layout.fillWidth: true; text: appState.visualEditorStatus }
                             ListView { id: visualControlList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: appState.visualEditorControlModel
-                                delegate: Rectangle { width: visualControlList.width; height: 78; color: root.editorBackground; border.color: root.borderColor; radius: 3
-                                    RowLayout { anchors.fill: parent; anchors.margins: 7; spacing: 8
-                                        ColumnLayout { Layout.fillWidth: true; spacing: 4
-                                            Text { Layout.fillWidth: true; text: label; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 12; font.bold: true; elide: Text.ElideRight }
-                                            Text { Layout.fillWidth: true; text: (visualTypeGroup.length > 0 ? visualTypeGroup + " - " : "") + valueType + (matchingCount > 0 ? " - " + matchingCount + " matching" : ""); color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
-                                            Field { id: visualValue; Layout.fillWidth: true; placeholderText: control === "color" ? "#3B82F6" : control === "boolean" ? "true" : "Value" }
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                section.property: "groupLabel"
+                                section.criteria: ViewSection.FullString
+                                section.delegate: Rectangle { width: visualControlList.width; height: section.length > 0 ? 24 : 0; color: root.panelBackground; Text { anchors.fill: parent; anchors.leftMargin: 8; text: section; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; font.bold: true; verticalAlignment: Text.AlignVCenter; elide: Text.ElideRight } }
+                                delegate: Rectangle {
+                                    id: visualControlRow
+                                    width: visualControlList.width
+                                    height: matchesOpen ? 196 : 126
+                                    color: root.editorBackground
+                                    border.color: root.borderColor
+                                    radius: 3
+                                    property bool matchesOpen: false
+                                    property var propertyMatches: model.matches || []
+                                    property var propertyGroupPath: model.groupPath || []
+                                    function inputValue() {
+                                        if (control === "boolean") return visualBoolean.checked
+                                        if (control === "slider" || valueType === "percentage") return Math.round(visualSlider.value)
+                                        return visualValue.text
+                                    }
+                                    ColumnLayout { anchors.fill: parent; anchors.topMargin: 7; anchors.rightMargin: 7; anchors.bottomMargin: 7; anchors.leftMargin: 7 + (visualControlRow.propertyGroupPath.length > 0 ? 10 : 0); spacing: 4
+                                        RowLayout { Layout.fillWidth: true; spacing: 8
+                                            ColumnLayout { Layout.fillWidth: true; spacing: 2
+                                                Text { Layout.fillWidth: true; text: label; color: root.textColor; font.family: "Segoe UI"; font.pixelSize: 12; font.bold: true; elide: Text.ElideRight }
+                                                Text { Layout.fillWidth: true; text: (propertyGroupPath.length > 0 ? propertyGroupPath.join(" > ") + " - " : "") + (visualTypeGroup.length > 0 ? visualTypeGroup + " - " : "") + valueType + (matchingCount > 0 ? " - " + matchingCount + " matching" : ""); color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
+                                                Text { visible: description.length > 0; Layout.fillWidth: true; text: description; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 10; elide: Text.ElideRight }
+                                            }
+                                            ChromeButton { text: "Apply"; enabled: appState.activeVisualCount > 0; onClicked: root.callController(function(c) { c.applyVisualEditorChange(model.id, visualControlRow.inputValue()) }) }
                                         }
-                                        ChromeButton { text: "Apply"; enabled: appState.activeVisualCount > 0; onClicked: root.callController(function(c) { c.applyVisualEditorChange(model.id, visualValue.text) }) }
+                                        RowLayout { Layout.fillWidth: true; spacing: 8
+                                            Rectangle { visible: control === "color"; Layout.preferredWidth: 24; Layout.preferredHeight: 24; radius: 2; color: visualValue.text.length > 0 ? visualValue.text : defaultValue; border.color: root.borderColor }
+                                            Field { id: visualValue; visible: control !== "boolean" && control !== "slider" && valueType !== "percentage"; Layout.fillWidth: true; text: defaultValue; placeholderText: control === "color" ? "#3B82F6" : "Value" }
+                                            CheckBox { id: visualBoolean; visible: control === "boolean"; checked: defaultValue === "True" || defaultValue === "true"; text: "" }
+                                            Slider { id: visualSlider; visible: control === "slider" || valueType === "percentage"; Layout.fillWidth: true; from: 0; to: 100; value: Number(defaultValue) || 0 }
+                                            Text { visible: control === "slider" || valueType === "percentage"; text: Math.round(visualSlider.value); color: root.mutedText; font.family: "Consolas"; font.pixelSize: 11; Layout.preferredWidth: 36 }
+                                        }
+                                        RowLayout { Layout.fillWidth: true; spacing: 6
+                                            ChromeButton { text: visualControlRow.matchesOpen ? "Hide matches" : "Matches"; normalColor: "#3c3c3c"; hoverColor: "#4a4a4a"; enabled: visualControlRow.propertyMatches.length > 0; onClicked: visualControlRow.matchesOpen = !visualControlRow.matchesOpen }
+                                            Text { Layout.fillWidth: true; text: visualControlRow.propertyMatches.length + " existing"; color: root.mutedText; font.family: "Segoe UI"; font.pixelSize: 10; elide: Text.ElideRight }
+                                        }
+                                        ListView { visible: visualControlRow.matchesOpen; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: visualControlRow.propertyMatches
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                            delegate: Text { width: visualControlList.width - 20; text: "- " + modelData.text; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideMiddle }
+                                        }
                                     }
                                 }
                             }
@@ -455,6 +487,7 @@ ApplicationWindow {
                             }
                             MutedLabel { Layout.fillWidth: true; text: appState.historyCurrentIndex >= 0 ? "Current row " + appState.historyCurrentIndex : "No history yet." }
                             ListView { id: historyList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 5; model: appState.historyModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                                 delegate: Rectangle {
                                     width: historyList.width
                                     height: 64
@@ -462,7 +495,7 @@ ApplicationWindow {
                                     color: rowState === "current" ? "#0e7490" : rowState === "previous" ? "#1f5f46" : "#6b2d35"
                                     border.color: historyMouse.containsMouse && rowState !== "current" ? "#ffffff" : root.borderColor
                                     opacity: reversible ? 1.0 : 0.65
-                                    MouseArea { id: historyMouse; anchors.fill: parent; hoverEnabled: true; enabled: rowState !== "current"; onClicked: root.callController(function(c) { c.goToHistoryIndex(historyIndex) }) }
+                                    MouseArea { id: historyMouse; anchors.fill: parent; hoverEnabled: true; enabled: rowState !== "current"; onClicked: { var savedY = historyList.contentY; root.callController(function(c) { c.goToHistoryIndex(historyIndex) }); historyList.contentY = savedY } }
                                     ColumnLayout { anchors.fill: parent; anchors.margins: 7; spacing: 3
                                         Text { Layout.fillWidth: true; text: "[ " + historyIndex + " ] [ " + timeText + " ] [ " + operationType + " ]"; color: "#ffffff"; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideRight }
                                         Text { Layout.fillWidth: true; text: displayName + (metadataText.length > 0 ? " ( " + metadataText + " )" : ""); color: "#ffffff"; font.family: "Segoe UI"; font.pixelSize: 12; font.bold: rowState === "current"; elide: Text.ElideRight }
@@ -482,7 +515,8 @@ ApplicationWindow {
                                 ChromeButton { Layout.fillWidth: true; text: "Reload"; onClicked: root.callController(function(c) { c.reloadContent() }) }
                             }
                             ListView { id: macroList; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; spacing: 6; model: appState.macroModel
-                                delegate: Rectangle { width: macroList.width; height: 86; color: macroMouse.containsMouse ? root.listHover : root.editorBackground; border.color: validationText.length > 0 ? root.warningColor : root.borderColor; radius: 4
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                delegate: Rectangle { id: macroRow; width: macroList.width; height: stepsOpen ? 178 : 86; color: macroMouse.containsMouse ? root.listHover : root.editorBackground; border.color: validationText.length > 0 ? root.warningColor : root.borderColor; radius: 4; property bool stepsOpen: false
                                     MouseArea { id: macroMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                                     ColumnLayout { anchors.fill: parent; anchors.margins: 7; spacing: 4
                                         RowLayout {
@@ -494,7 +528,12 @@ ApplicationWindow {
                                         RowLayout { Layout.fillWidth: true; spacing: 6
                                             ChromeButton { text: running ? "Running" : "Run"; enabled: canRun; onClicked: root.callController(function(c) { c.runMacro(index) }) }
                                             ChromeButton { text: "Export"; onClicked: root.callController(function(c) { c.exportMacro(index) }) }
+                                            ChromeButton { text: macroRow.stepsOpen ? "Hide steps" : "Steps"; normalColor: "#3c3c3c"; hoverColor: "#4a4a4a"; enabled: stepCount > 0; onClicked: macroRow.stepsOpen = !macroRow.stepsOpen }
                                             Item { Layout.fillWidth: true }
+                                        }
+                                        ListView { visible: macroRow.stepsOpen; Layout.fillWidth: true; Layout.fillHeight: true; clip: true; model: steps
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                            delegate: Text { width: macroList.width - 20; text: (index + 1) + ". " + modelData.type + " - " + modelData.summary; color: root.mutedText; font.family: "Consolas"; font.pixelSize: 10; elide: Text.ElideMiddle }
                                         }
                                     }
                                 }
@@ -523,12 +562,68 @@ ApplicationWindow {
                                 MutedLabel { Layout.fillWidth: true; text: appState.hasActiveFilter ? "No loaded document matches the active filter." : "Select a page or visual from the project tree."; horizontalAlignment: Text.AlignHCenter }
                             }
                         }
-                        ScrollView { visible: appState.currentIndex >= 0; Layout.fillWidth: true; Layout.fillHeight: true; clip: true
-                            TextArea { id: editorArea; visible: appState.searchText.length === 0; text: appState.currentText; textFormat: TextEdit.PlainText; wrapMode: TextEdit.NoWrap; selectByMouse: true; persistentSelection: true; color: root.textColor; selectedTextColor: "#ffffff"; selectionColor: "#264f78"; font.family: "Consolas"; font.pixelSize: 14; leftPadding: 14; topPadding: 12; rightPadding: 14; bottomPadding: 12; background: Rectangle { color: root.editorBackground }
-                                onTextChanged: if (visible && activeFocus && text !== appState.currentText) root.callController(function(c) { c.updateFileText(appState.currentIndex, text) })
-                                Component.onCompleted: syntaxBridge.attach(textDocument)
+                        ColumnLayout { visible: appState.currentIndex >= 0; Layout.fillWidth: true; Layout.fillHeight: true; spacing: 0
+                            Rectangle { id: editorFindBar; visible: false; Layout.fillWidth: true; Layout.preferredHeight: 38; color: root.headerBackground; border.color: root.borderColor
+                                RowLayout { anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 8; spacing: 6
+                                    Field { id: editorFindField; Layout.fillWidth: true; placeholderText: "Find"; text: appState.searchText; onTextEdited: root.callController(function(c) { c.searchText = text }); Keys.onReturnPressed: function(event) { root.callController(function(c) { c.navigateNextMatch() }); event.accepted = true } }
+                                    Field { id: editorReplaceField; Layout.fillWidth: true; placeholderText: "Replace"; text: appState.replaceText; onTextEdited: root.callController(function(c) { c.replaceText = text }) }
+                                    ChromeButton { text: "Prev"; enabled: appState.totalMatches > 0; onClicked: root.callController(function(c) { c.navigatePreviousMatch() }) }
+                                    ChromeButton { text: "Next"; enabled: appState.totalMatches > 0; onClicked: root.callController(function(c) { c.navigateNextMatch() }) }
+                                    ChromeButton { text: "Replace"; enabled: appState.searchText.length > 0; onClicked: root.callController(function(c) { c.replaceCurrentMatch() }) }
+                                    ChromeButton { text: "All"; enabled: appState.searchText.length > 0; onClicked: root.callController(function(c) { c.replaceCurrentFile() }) }
+                                    IconButton { text: "x"; contentColor: root.accentRed; onClicked: editorFindBar.visible = false }
+                                }
                             }
-                            TextEdit { visible: appState.searchText.length > 0; readOnly: true; selectByMouse: true; textFormat: TextEdit.RichText; text: appState.currentHighlightedHtml; wrapMode: TextEdit.NoWrap; color: root.textColor; selectedTextColor: "#ffffff"; selectionColor: "#264f78"; font.family: "Consolas"; font.pixelSize: 14; leftPadding: 14; topPadding: 12; rightPadding: 14; bottomPadding: 12 }
+                            ScrollView { id: editorScroll; Layout.fillWidth: true; Layout.fillHeight: true; clip: true
+                                ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AlwaysOn }
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
+                                Row {
+                                    id: editorRow
+                                    spacing: 0
+                                    Rectangle {
+                                        id: lineGutter
+                                        width: Math.max(44, lineText.implicitWidth + 16)
+                                        height: Math.max(editorScroll.availableHeight, editorArea.height)
+                                        color: "#181818"
+                                        Text {
+                                            id: lineText
+                                            anchors.top: parent.top
+                                            anchors.right: parent.right
+                                            anchors.topMargin: 12
+                                            anchors.rightMargin: 8
+                                            text: root.lineNumbers(appState.currentText)
+                                            color: root.mutedText
+                                            font.family: "Consolas"
+                                            font.pixelSize: 14
+                                            horizontalAlignment: Text.AlignRight
+                                        }
+                                    }
+                                    TextArea {
+                                        id: editorArea
+                                        text: appState.currentText
+                                        textFormat: TextEdit.PlainText
+                                        wrapMode: TextEdit.NoWrap
+                                        selectByMouse: true
+                                        persistentSelection: true
+                                        color: root.textColor
+                                        selectedTextColor: "#ffffff"
+                                        selectionColor: "#264f78"
+                                        font.family: "Consolas"
+                                        font.pixelSize: 14
+                                        leftPadding: 14
+                                        topPadding: 12
+                                        rightPadding: 14
+                                        bottomPadding: 12
+                                        background: Rectangle { color: root.editorBackground }
+                                        width: Math.max(editorScroll.availableWidth - lineGutter.width, contentWidth + leftPadding + rightPadding + 24)
+                                        height: Math.max(editorScroll.availableHeight, contentHeight + topPadding + bottomPadding + 24)
+                                        onTextChanged: if (activeFocus && text !== appState.currentText) root.callController(function(c) { c.updateFileText(appState.currentIndex, text) })
+                                        Component.onCompleted: syntaxBridge.attach(textDocument)
+                                        Keys.onPressed: function(event) { if ((event.modifiers & Qt.ControlModifier) && event.key === Qt.Key_F) { editorFindBar.visible = true; editorFindField.forceActiveFocus(); event.accepted = true } }
+                                    }
+                                }
+                            }
+                            Connections { target: root.controller; function onMatchNavigationChanged() { if (appState.activeMatchStart >= 0 && appState.activeMatchEnd >= appState.activeMatchStart) { editorArea.cursorPosition = appState.activeMatchStart; editorArea.select(appState.activeMatchStart, appState.activeMatchEnd); editorArea.forceActiveFocus() } else if (appState.activeMatchLine > 0) { var pos = root.lineOffset(appState.currentText, appState.activeMatchLine); editorArea.cursorPosition = pos; editorArea.select(pos, Math.min(appState.currentText.length, pos + Math.max(1, appState.searchText.length))); editorArea.forceActiveFocus() } } }
                         }
                         Rectangle { Layout.fillWidth: true; Layout.preferredHeight: 24; color: root.statusBackground
                             RowLayout { anchors.fill: parent; anchors.leftMargin: 10; anchors.rightMargin: 10; spacing: 12
@@ -556,6 +651,7 @@ ApplicationWindow {
                 Text { Layout.fillWidth: true; text: appState.folderScanCount + " Power BI JSON file(s) found"; color: appState.folderScanCount > 0 ? root.okColor : root.warningColor; font.family: "Segoe UI"; font.pixelSize: 13 }
                 Rectangle { Layout.fillWidth: true; Layout.fillHeight: true; color: root.editorBackground; border.color: root.borderColor
                     ListView { id: folderTree; anchors.fill: parent; anchors.margins: 8; clip: true; spacing: 1; model: appState.folderScanModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                         delegate: Rectangle { width: folderTree.width; height: 42; color: folderMouse.containsMouse ? root.listHover : "transparent"
                             MouseArea { id: folderMouse; anchors.fill: parent; hoverEnabled: true }
                             RowLayout { anchors.fill: parent; anchors.leftMargin: 8 + depth * 16; anchors.rightMargin: 8; spacing: 8
@@ -598,6 +694,7 @@ ApplicationWindow {
                 }
                 Rectangle { Layout.fillWidth: true; Layout.fillHeight: true; color: root.editorBackground; border.color: root.borderColor; radius: 3
                     ListView { id: ruleList; anchors.fill: parent; anchors.margins: 8; clip: true; spacing: 6; model: appState.editingRuleModel
+                                ScrollBar.vertical: ScrollBar { policy: ScrollBar.AlwaysOn }
                         delegate: Rectangle { width: ruleList.width; height: 42; color: ruleMouse.containsMouse ? root.listHover : "transparent"; radius: 2
                             MouseArea { id: ruleMouse; anchors.fill: parent; hoverEnabled: true; acceptedButtons: Qt.NoButton }
                             RowLayout { anchors.fill: parent; anchors.leftMargin: 4; anchors.rightMargin: 4; spacing: 8
@@ -639,4 +736,3 @@ ApplicationWindow {
         }
     }
 }
-

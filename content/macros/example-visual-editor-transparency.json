@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example visual editor transparency",
+  "id": "builtin.macro.example-visual-editor-transparency",
+  "steps": [
+    {
+      "controlId": "general-background-transparency",
+      "value": 25,
+      "type": "visual-editor-change"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -13,6 +13,10 @@ MACRO_STEP_TYPES = (
     "search-replace",
     "replace-current",
     "replace-all",
+    "search-replace-one",
+    "search-replace-all",
+    "dynamic-filter-apply",
+    "format-json",
     "visual-editor-change",
 )
 
@@ -28,6 +32,7 @@ class MacroStep:
     has_replace_value: bool = True
     control_id: str = ""
     value: Any = ""
+    source_history_index: int = -1
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -40,6 +45,7 @@ class MacroStep:
             "controlId": self.control_id,
             "value": self.value,
             "summary": self.summary,
+            "sourceHistoryIndex": self.source_history_index,
         }
 
     @property
@@ -56,6 +62,14 @@ class MacroStep:
             return "replace current match"
         if self.type == "replace-all":
             return "replace all active matches"
+        if self.type == "search-replace-one":
+            return f"searchValue: {self.search_value}; replace current with: {self.replace_value}"
+        if self.type == "search-replace-all":
+            return f"searchValue: {self.search_value}; replace all with: {self.replace_value}"
+        if self.type == "dynamic-filter-apply":
+            return f"dynamicFilter: {self.filter_name}; value: {self.value}"
+        if self.type == "format-json":
+            return "format current JSON"
         if self.type == "visual-editor-change":
             return f"controlId: {self.control_id}; value: {self.value}"
         return "unknown step"
@@ -102,11 +116,13 @@ class MacroItem:
                 data["filterId"] = step.filter_id
             if step.search_value:
                 data["searchValue"] = step.search_value
-            if step.type in {"search-and-replace", "search-replace"} or step.replace_value or step.has_replace_value:
+            if step.type in {"search-and-replace", "search-replace", "search-replace-one", "search-replace-all"} or step.replace_value or step.has_replace_value:
                 data["replaceValue"] = step.replace_value
             if step.control_id:
                 data["controlId"] = step.control_id
-            if step.type == "visual-editor-change":
+            if step.type in {"visual-editor-change", "dynamic-filter-apply"}:
                 data["value"] = step.value
+            if step.source_history_index >= 0:
+                data["sourceHistoryIndex"] = step.source_history_index
             steps.append(data)
         return {"id": self.id, "name": self.name, "steps": steps}

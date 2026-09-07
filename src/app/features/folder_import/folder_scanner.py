@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
@@ -18,9 +18,8 @@ class FolderScanResult:
 
 
 class FolderScanner:
-    """Find importable Power BI page.json and visual.json files under selected roots."""
+    """Find importable JSON files under selected roots."""
 
-    TARGET_FILE_NAMES = {"page.json", "visual.json"}
     SKIPPED_DIRECTORIES = {".pbi", "__pycache__", ".git"}
     SKIPPED_FILE_NAMES = {
         ".platform",
@@ -51,9 +50,7 @@ class FolderScanner:
             ):
                 directories[:] = [directory for directory in directories if directory.casefold() not in self.SKIPPED_DIRECTORIES]
                 for file_name in files:
-                    if file_name.casefold() not in self.TARGET_FILE_NAMES:
-                        continue
-                    self._append_file(Path(current_root) / file_name, root_path, existing, seen, result)
+                    self._append_file(Path(current_root) / file_name, root_path, existing, seen, result, allow_loose=True)
 
         result.items.sort(key=lambda item: item.relative_path.casefold())
         return result
@@ -72,16 +69,12 @@ class FolderScanner:
             return
         if resolved.suffix.casefold() != ".json":
             return
-        if resolved.name.casefold() not in self.TARGET_FILE_NAMES and not allow_loose:
-            return
         if resolved in existing_paths or resolved in seen_paths:
             result.skipped_duplicates += 1
             return
 
         data = self._json_data(resolved)
         file_type = classify_json_file(resolved, data)
-        if file_type is None and not allow_loose:
-            return
 
         seen_paths.add(resolved)
         display_name, _source = display_name_for_document(resolved, data, file_type, resolved.name)

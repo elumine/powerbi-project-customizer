@@ -1,0 +1,10 @@
+﻿{
+  "name": "Example filter by name",
+  "id": "builtin.macro.example-filter-by-name",
+  "steps": [
+    {
+      "type": "filter",
+      "filterName": "Table visuals"
+    }
+  ]
+}

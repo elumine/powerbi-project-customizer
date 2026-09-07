@@ -56,7 +56,7 @@ class FileManagementService:
 
             try:
                 document = self._repository.load_document(file_path)
-            except FileServiceError as error:
+            except (FileServiceError, ValueError, json.JSONDecodeError) as error:
                 result.errors.append(str(error))
                 continue
 
@@ -106,7 +106,7 @@ class FileManagementService:
                 continue
             try:
                 self._repository.save_document(document)
-            except FileServiceError as error:
+            except (FileServiceError, ValueError, json.JSONDecodeError) as error:
                 result.errors.append(str(error))
                 continue
             self._files.mark_saved(row)

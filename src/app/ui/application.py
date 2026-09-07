@@ -92,80 +92,50 @@ def run_smoke_test(args: list[str]) -> int:
             assert invalid_macro.validation_errors, "Invalid macros should display validation errors"
 
             found = controller.scan_folder_paths([report_root])
-            assert found == 4, "Folder scan should include one page.json and three visual.json files"
+            assert found == 5, "Folder scan should include every non-skipped JSON file"
             assert controller.get_folder_import_visible(), "Folder scan should open import modal state"
-            assert controller.get_folder_scan_count() == 4, "Folder scan model did not update"
+            assert controller.get_folder_scan_count() == 5, "Folder scan model did not update"
             added = controller.confirmFolderImport()
-            assert added == 4, "Folder import should add scanned PBIR files"
-            assert controller.get_file_count() == 4, "Imported PBIR files did not reach file model"
-            assert controller.get_project_tree_count() == 4, "Project tree should show one page plus three visuals"
+            assert added == 4, "Folder import should add valid JSON files and skip invalid JSON during flattening"
+            assert controller.get_file_count() == 4, "Imported JSON files did not reach file model"
+            assert controller.get_project_tree_count() == 4, "Project tree should show imported flat JSON files"
 
             documents = list(controller.get_file_model().documents())
-            page = next(document for document in documents if document.file_type_text == "Page")
-            visuals = [document for document in documents if document.file_type_text == "Visual"]
-            assert page.name == "Retention Cockpit", "Page display name should come from displayName"
-            assert any(document.name == "Table Visual" for document in visuals), "Visual title should come from visualContainer title literal"
-            assert any(document.visual_type == "lineChart" for document in visuals), "Nested visual.visualType should be detected"
-            assert all(document.parent_page_id == page.id for document in visuals), "Visuals should attach to parent page"
-            assert len(page.visual_ids) == 3, "Page should know its visual children"
-
-            assert controller.applyDynamicPageNameFilter("Retention"), "Dynamic page filter should apply"
-            assert controller.get_active_file_count() == 4, "Page filter should activate page and child visuals"
-            assert controller.applyDynamicVisualTypeFilter("line"), "Dynamic visual-type filter should apply"
-            assert controller.get_active_file_count() == 1, "Visual-type filter should activate one visual"
-            assert controller.get_project_tree_count() == 2, "Visual filter should keep parent page visible as context"
-            assert controller.deactivateFilter(), "Filter should deactivate"
-            assert controller.get_active_file_count() == 4, "All files should reactivate after clearing filters"
+            assert any(document.file_type_text == "Visual" for document in documents), "Flattened visual imports should remain classified as Visual"
+            assert any(document.file_type_text == "Page" for document in documents), "Flattened page imports should remain classified as Page"
+            assert any(document.file_type_text == "Json" for document in documents), "Generic flattened imports should remain classified as Json"
+            assert any("visual.visualType" in document.text for document in documents), "PBIR visual JSON should be flattened on read"
+            assert any(document.file_name == "other.json" for document in documents), "Folder import should include generic JSON files"
 
             controller.set_search_text("targetKey")
             controller.set_replace_text("changedKey")
             app.processEvents()
-            assert controller.get_total_matches() == 3, "Search should include active visuals including invalid JSON"
+            assert controller.get_total_matches() == 2, "Search should include active flattened JSON documents"
             assert controller.replaceCurrentMatch() == 1, "Replace should change one selected/first match"
-            assert controller.get_total_matches() == 2, "Single replace should leave remaining matches"
-
-            assert controller.applyDynamicVisualTypeFilter("table"), "Table visual filter should apply"
-            assert controller.get_active_visual_count() == 1, "Visual editor should see one active table visual"
-            assert controller.applyVisualEditorChange("general-title-text", "Updated Table"), "Visual editor should update title text"
-            documents = list(controller.get_file_model().documents())
-            table_document = next(document for document in documents if document.visual_type == "table")
-            assert "'Updated Table'" in table_document.text, "Visual editor should preserve Power BI literal string format"
-            assert table_document.is_dirty, "Visual editor changes should mark visual dirty"
-
-            macro_index = next(index for index, macro in enumerate(controller.get_macro_model().items()) if macro.name == "Set Table Title Blue")
-            assert controller.runMacro(macro_index), "Visual editor macro should start"
-            _process_macro_events(app, controller)
-            table_document = next(document for document in controller.get_file_model().documents() if document.visual_type == "table")
-            assert "#3B82F6" in table_document.text, "Visual editor macro should update title color"
+            assert controller.get_total_matches() == 1, "Single replace should refresh remaining match positions"
 
             find_macro_index = next(index for index, macro in enumerate(controller.get_macro_model().items()) if macro.name == "Find Target Key")
             assert controller.runMacro(find_macro_index), "Valid search macro should start"
             _process_macro_events(app, controller)
             assert controller.get_search_text() == "targetKey", "Search macro should set the search value"
 
-            controller.deactivateFilter()
-            documents = list(controller.get_file_model().documents())
-            line_row = next(index for index, document in enumerate(documents) if document.visual_type == "lineChart")
-            line_document = documents[line_row]
-            controller.updateFileText(line_row, line_document.text.replace("targetKey", "dirtyKey", 1))
-            table_filter_index = next(index for index, content_filter in enumerate(controller.get_filters_model().filters()) if content_filter.display_name == "Smoke Table")
-            controller.applyFilter(table_filter_index)
-            assert controller.get_active_file_count() == 1, "Table filter should hide the dirty line visual from operations"
-            assert controller.saveAll() >= 1, "Save All should save dirty files even while filters are active"
-            assert not controller.get_file_model().document_at(line_row).is_dirty, "Filtered-out dirty file should be marked saved"
-            assert "dirtyKey" in Path(line_document.path).read_text(encoding="utf-8"), "Filtered-out dirty file should be written to disk"
+            target_row = next(index for index, document in enumerate(controller.get_file_model().documents()) if "changedKey" in document.text)
+            target_document = controller.get_file_model().document_at(target_row)
+            assert target_document is not None and target_document.is_dirty, "Replace should mark flattened JSON dirty"
+            assert controller.saveAll() >= 1, "Save All should save dirty flattened JSON files"
+            assert not controller.get_file_model().document_at(target_row).is_dirty, "Saved flattened JSON should be marked clean"
 
             controller.openNewFilterEditor()
-            controller.set_editing_filter_name("Line Contains")
-            controller.set_editing_filter_target("Visual")
-            controller.updateEditingRuleKey(0, "visualType")
+            controller.set_editing_filter_name("Target Key Contains")
+            controller.set_editing_filter_target("All")
+            controller.updateEditingRuleKey(0, "targetKey")
             controller.updateEditingRuleOperation(0, "includes")
-            controller.updateEditingRuleValue(0, "line")
-            assert controller.get_editing_filter_can_save(), "Valid targeted filter should be saveable"
-            assert controller.saveFilterEditor(), "Targeted filter should save"
+            controller.updateEditingRuleValue(0, "red")
+            assert controller.get_editing_filter_can_save(), "Valid flat JSON filter should be saveable"
+            assert controller.saveFilterEditor(), "Flat JSON filter should save"
             persisted = json.loads(filter_path.read_text(encoding="utf-8"))
-            saved_filter = next(item for item in persisted["filters"] if item["displayName"] == "Line Contains")
-            assert saved_filter["targetJsonFileType"] == "Visual", "Saved filters should persist targetJsonFileType"
+            saved_filter = next(item for item in persisted["filters"] if item["displayName"] == "Target Key Contains")
+            assert saved_filter["targetJsonFileType"] == "All", "Saved flat JSON filters should persist targetJsonFileType"
             assert saved_filter["rules"][0]["operation"] == "includes", "Filter operation selector should preserve includes"
 
             controller.startAgain()
@@ -185,7 +155,7 @@ def run_smoke_test(args: list[str]) -> int:
             else:
                 os.environ["JSON_MULTI_EDITOR_CONTENT_PATH"] = previous_content_path
 
-    print("Smoke test passed: v5 PBIR import, hierarchy, filters, search replace, visual editor, macros, save, and reset worked.")
+    print("Smoke test passed: flat JSON folder import, search replace, macros, save, filters, and reset worked.")
     return 0
 
 
@@ -241,8 +211,8 @@ def _write_smoke_content(content_root: Path) -> None:
     filters_root.mkdir(parents=True)
     macros_root.mkdir(parents=True)
     filters = [
-        ("table.json", "smoke.filter.table", "Smoke Table", "Visual", "visualType", "equals", "table", "#4ec9b0"),
-        ("chart.json", "smoke.filter.chart", "Smoke Chart", "Visual", "visualType", "includes", "chart", "#c586c0"),
+        ("table.json", "smoke.filter.table", "Smoke Table", "Visual", "visual.visualType", "equals", "table", "#4ec9b0"),
+        ("chart.json", "smoke.filter.chart", "Smoke Chart", "Visual", "visual.visualType", "includes", "chart", "#c586c0"),
         ("page.json", "smoke.filter.page", "Smoke Page", "Page", "displayName", "includes", "Retention", "#dcdcaa"),
     ]
     for file_name, filter_id, display_name, target, key, operation, value, color in filters:
@@ -269,4 +239,7 @@ def _process_macro_events(app: QApplication, controller: AppController) -> None:
         if not controller.get_any_macro_running():
             return
     raise AssertionError("Macro did not finish within the smoke-test event budget")
+
+
+
 

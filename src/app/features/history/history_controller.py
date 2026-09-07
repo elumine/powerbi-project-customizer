@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Iterable
 
@@ -21,6 +21,10 @@ class HistoryController:
     @property
     def current_index(self) -> int:
         return self._service.current_index
+
+    @property
+    def entries(self) -> tuple[HistoryEntry, ...]:
+        return self._service.entries
 
     def clear(self) -> None:
         self._service.clear()

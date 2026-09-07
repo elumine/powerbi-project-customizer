@@ -1,11 +1,11 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import uuid
 from pathlib import Path
 
 from app.core.content_filter import ContentFilter
 from app.features.macros.macro_repository import MacroRepository
-from app.features.macros.macro_types import MACRO_STEP_TYPES, MacroItem
+from app.features.macros.macro_types import MACRO_STEP_TYPES, MacroItem, MacroStep
 from app.ui.macro_models import MacroListModel
 
 
@@ -99,6 +99,75 @@ class MacroController:
         item.runtime_error = error
         self._model.refresh_row(row)
 
+    def create_from_history_entries(self, entries, filters: list[ContentFilter]) -> tuple[bool, str]:
+        steps: list[MacroStep] = []
+        skipped: list[int] = []
+        macro_id = f"recorded.{uuid.uuid4()}"
+        for entry in entries:
+            step = self._step_from_history_entry(macro_id, len(steps), entry)
+            if step is None:
+                skipped.append(entry.index)
+                continue
+            steps.append(step)
+        if not steps:
+            return False, "No replayable history entries were selected."
+        first_index = entries[0].index
+        last_index = entries[-1].index
+        item = MacroItem(
+            id=macro_id,
+            name=f"Recorded macro {first_index}-{last_index}",
+            steps=steps,
+        )
+        item.validation_errors = self._validation_errors(item, filters)
+        self._model.reset(self._model.items() + [item])
+        suffix = f" Skipped history rows: {', '.join(str(index) for index in skipped)}." if skipped else ""
+        return True, f"Created macro from history rows {first_index}-{last_index}.{suffix}"
+
+    @staticmethod
+    def _step_from_history_entry(macro_id: str, step_index: int, entry) -> MacroStep | None:
+        step_id = f"{macro_id}.step.{step_index + 1}"
+        metadata = dict(entry.metadata or {})
+        operation_type = entry.operation_type
+        if operation_type in {"search-replace-one", "search-replace-current-file"}:
+            return MacroStep(
+                id=step_id,
+                type="search-replace-one",
+                search_value=str(metadata.get("search", "")),
+                replace_value=str(metadata.get("replace", "")),
+                source_history_index=entry.index,
+            )
+        if operation_type == "search-replace-all":
+            return MacroStep(
+                id=step_id,
+                type="search-replace-all",
+                search_value=str(metadata.get("search", "")),
+                replace_value=str(metadata.get("replace", "")),
+                source_history_index=entry.index,
+            )
+        if operation_type == "visual-editor-change":
+            return MacroStep(
+                id=step_id,
+                type="visual-editor-change",
+                control_id=entry.display_name,
+                value=metadata.get("value", ""),
+                source_history_index=entry.index,
+            )
+        if operation_type == "filter-apply":
+            return MacroStep(id=step_id, type="filter-apply", filter_name=entry.display_name, source_history_index=entry.index)
+        if operation_type == "filter-clear":
+            return MacroStep(id=step_id, type="filter-clear", source_history_index=entry.index)
+        if operation_type == "dynamic-filter-apply":
+            return MacroStep(
+                id=step_id,
+                type="dynamic-filter-apply",
+                filter_name=str(metadata.get("kind", "")),
+                value=str(metadata.get("value", "")),
+                source_history_index=entry.index,
+            )
+        if operation_type == "format-json":
+            return MacroStep(id=step_id, type="format-json", source_history_index=entry.index)
+        return None
+
     def _validation_errors(self, item: MacroItem, filters: list[ContentFilter]) -> list[str]:
         errors = list(item.load_errors)
         if not item.name.strip():
@@ -124,11 +193,16 @@ class MacroController:
             elif step.type == "search":
                 if not step.search_value:
                     errors.append(f"{label}: searchValue is required.")
-            elif step.type in {"search-and-replace", "search-replace"}:
+            elif step.type in {"search-and-replace", "search-replace", "search-replace-one", "search-replace-all"}:
                 if not step.search_value:
                     errors.append(f"{label}: searchValue is required.")
                 if step.type == "search-and-replace" and not step.has_replace_value:
                     errors.append(f"{label}: replaceValue is required.")
+            elif step.type == "dynamic-filter-apply":
+                if step.filter_name not in {"page-name", "visual-type", "visual-name"}:
+                    errors.append(f"{label}: dynamic filter kind is required.")
+                if str(step.value) == "":
+                    errors.append(f"{label}: value is required.")
             elif step.type == "visual-editor-change":
                 if not step.control_id:
                     errors.append(f"{label}: controlId is required.")

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import html
 import re
@@ -65,6 +65,12 @@ class SearchService:
             end = min(len(text), match.end() + cls.PREVIEW_RADIUS)
             before = text[start:match.start()]
             after = text[match.end():end]
+            line_number = text.count("\n", 0, match.start()) + 1
+            line_start = text.rfind("\n", 0, match.start()) + 1
+            line_end = text.find("\n", match.end())
+            if line_end < 0:
+                line_end = len(text)
+            line_text = cls._compact(text[line_start:line_end])
             previews.append(
                 {
                     "before": cls._compact(before, prefix=start > 0),
@@ -72,7 +78,9 @@ class SearchService:
                     "after": cls._compact(after, suffix=end < len(text)),
                     "replacement": replacement,
                     "index": match_index,
-                    "line": text.count("\n", 0, match.start()) + 1,
+                    "line": line_number,
+                    "lineText": line_text,
+                    "displayText": f"[{line_number}] {line_text}",
                     "start": match.start(),
                     "end": match.end(),
                 }

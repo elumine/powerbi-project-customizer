@@ -1,0 +1,14 @@
+﻿{
+  "name": "Example replace all active matches",
+  "id": "builtin.macro.example-replace-all",
+  "steps": [
+    {
+      "searchValue": "targetKey",
+      "type": "search"
+    },
+    {
+      "replaceValue": "changedKey",
+      "type": "replace-all"
+    }
+  ]
+}

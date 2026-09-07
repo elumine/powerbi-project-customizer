@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -84,8 +84,14 @@ class MacroRepository:
             errors.append(f"Step {index + 1}: unknown step type '{step_type}'.")
         if step_type == "search-and-replace" and "replaceValue" not in data:
             errors.append(f"Step {index + 1}: replaceValue is required.")
-        if step_type == "visual-editor-change" and "value" not in data:
+        if step_type in {"visual-editor-change", "dynamic-filter-apply"} and "value" not in data:
             errors.append(f"Step {index + 1}: value is required.")
+
+        source_history_index = -1
+        try:
+            source_history_index = int(data.get("sourceHistoryIndex", -1) or -1)
+        except (TypeError, ValueError):
+            errors.append(f"Step {index + 1}: sourceHistoryIndex must be an integer.")
 
         return (
             MacroStep(
@@ -98,6 +104,7 @@ class MacroRepository:
                 has_replace_value="replaceValue" in data,
                 control_id=str(data.get("controlId", "")).strip(),
                 value=data.get("value", ""),
+                source_history_index=source_history_index,
             ),
             errors,
         )

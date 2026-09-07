@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example visual editor hidden",
+  "id": "builtin.macro.example-visual-editor-hidden",
+  "steps": [
+    {
+      "controlId": "general-hidden",
+      "value": true,
+      "type": "visual-editor-change"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import uuid
 from pathlib import Path
@@ -140,7 +140,16 @@ class FilterController:
         return self._apply_dynamic_filter(
             display_name="Visual type contains " + value,
             target_json_file_type=JsonFileType.VISUAL.value,
-            key="visualType",
+            key="visual.visualType",
+            value=value,
+            files=files,
+        )
+
+    def apply_dynamic_visual_name_filter(self, value: str, files: FileListModel) -> bool:
+        return self._apply_dynamic_filter(
+            display_name="Visual name contains " + value,
+            target_json_file_type=JsonFileType.VISUAL.value,
+            key="visualName",
             value=value,
             files=files,
         )
@@ -170,13 +179,14 @@ class FilterController:
         visible_rows: set[int] = set()
         page_id_to_row = {document.id: row for row, document in enumerate(documents) if document.file_type == JsonFileType.PAGE}
         target = normalize_filter_target(active_filter.target_json_file_type)
+        is_visual_name_filter = self._is_visual_name_filter(active_filter)
 
         for row, document in enumerate(documents):
-            if not document.is_valid_json:
+            if not document.is_valid_json and not is_visual_name_filter:
                 continue
             if not self._document_matches_target(document, target):
                 continue
-            if ContentFilterMatcher.matches_filter(document.parsed_json, active_filter):
+            if self._document_matches_filter(document, active_filter):
                 matched_rows.add(row)
                 visible_rows.add(row)
 
@@ -311,6 +321,38 @@ class FilterController:
             return self._dynamic_filter
         return self._filters.active_filter()
 
+    @staticmethod
+    def _is_visual_name_filter(active_filter: ContentFilter) -> bool:
+        return any(rule.key.strip().casefold() == "visualname" for rule in active_filter.rules)
+
+    def _document_matches_filter(self, document, active_filter: ContentFilter) -> bool:
+        if self._is_visual_name_filter(active_filter):
+            return all(self._matches_visual_name_rule(document, rule) for rule in active_filter.rules)
+        return ContentFilterMatcher.matches_filter(document.parsed_json, active_filter)
+
+    @staticmethod
+    def _matches_visual_name_rule(document, rule: FilterRule) -> bool:
+        if rule.operation not in FILTER_OPERATIONS:
+            return False
+        candidates = [
+            document.display_name,
+            document.pbir_name,
+            document.path.parent.name,
+            document.path.name,
+            document.relative_path,
+        ]
+        values = [str(value).casefold() for value in candidates if str(value).strip()]
+        needle = rule.value.casefold()
+        if rule.operation == "equals":
+            return any(value == needle for value in values)
+        if rule.operation == "includes":
+            return any(needle in value for value in values)
+        if rule.operation == "notEquals":
+            return all(value != needle for value in values)
+        if rule.operation == "notIncludes":
+            return all(needle not in value for value in values)
+        return False
+
     def _user_filters(self) -> list[ContentFilter]:
         return [content_filter for content_filter in self._filters.filters() if not content_filter.is_read_only]
 
@@ -324,3 +366,4 @@ class FilterController:
     def _normalized_rule(rule: FilterRule) -> FilterRule:
         operation = rule.operation if rule.operation in FILTER_OPERATIONS else "equals"
         return FilterRule(id=rule.id, key=rule.key.strip(), operation=operation, value=rule.value)
+

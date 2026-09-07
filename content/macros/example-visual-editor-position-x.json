@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example visual editor position x",
+  "id": "builtin.macro.example-visual-editor-position-x",
+  "steps": [
+    {
+      "controlId": "general-position-x",
+      "value": 48,
+      "type": "visual-editor-change"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example search replace alias",
+  "id": "builtin.macro.example-search-replace-alias",
+  "steps": [
+    {
+      "searchValue": "oldValue",
+      "type": "search-replace",
+      "replaceValue": "newValue"
+    }
+  ]
+}

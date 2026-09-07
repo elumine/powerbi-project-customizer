@@ -193,10 +193,14 @@ class ProjectTreeModel(QAbstractListModel):
     def _visual_sort_key(document: JsonDocument) -> tuple[float, str, str]:
         z_value = 0.0
         if isinstance(document.parsed_json, dict):
-            position = document.parsed_json.get("position")
-            if isinstance(position, dict):
-                try:
-                    z_value = float(position.get("z", 0))
-                except (TypeError, ValueError):
-                    z_value = 0.0
+            raw_z = document.parsed_json.get("position.z")
+            if raw_z is None:
+                position = document.parsed_json.get("position")
+                if isinstance(position, dict):
+                    raw_z = position.get("z")
+            try:
+                z_value = float(raw_z or 0)
+            except (TypeError, ValueError):
+                z_value = 0.0
         return (z_value, document.name.casefold(), document.relative_path.casefold())
+

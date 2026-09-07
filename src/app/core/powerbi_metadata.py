@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -20,7 +20,7 @@ def classify_json_file(path: Path, data: Any | None = None) -> JsonFileType | No
 
     if isinstance(data, dict):
         visual = data.get("visual")
-        if isinstance(visual, dict) or "visualType" in data or "visualGroup" in data:
+        if isinstance(visual, dict) or "visual.visualType" in data or "visualType" in data or "visualGroup" in data:
             return JsonFileType.VISUAL
         if "displayName" in data and ("height" in data or "width" in data or "displayOption" in data) and "visual" not in data:
             return JsonFileType.PAGE
@@ -45,13 +45,16 @@ def pbir_name_from_data(data: Any) -> str:
 def visual_type_from_data(data: Any) -> str:
     if not isinstance(data, dict):
         return ""
+    for key in ("visual.visualType", "visualType"):
+        value = data.get(key, "")
+        if value is not None and str(value).strip():
+            return str(value).strip()
     visual = data.get("visual")
     if isinstance(visual, dict):
         value = visual.get("visualType", "")
         if value is not None and str(value).strip():
             return str(value).strip()
-    value = data.get("visualType", "")
-    return str(value).strip() if value is not None else ""
+    return ""
 
 
 def display_name_for_document(path: Path, data: Any, file_type: JsonFileType | None, fallback: str) -> tuple[str, str]:
@@ -135,8 +138,11 @@ def _visual_title(data: Any) -> str:
     if title:
         return title
 
-    # Compatibility with older app fixtures and theme-like JSON examples.
     if isinstance(data, dict):
+        value = data.get("visual.visualContainerObjects.title.[0].properties.text.expr.Literal.Value")
+        title = decode_powerbi_literal_string(value)
+        if title:
+            return title
         for key in ("Title", "title"):
             value = data.get(key)
             if value is not None and str(value).strip():
@@ -156,3 +162,4 @@ def _get_path(data: Any, path: list[str | int]) -> Any:
             return None
         current = current[part]
     return current
+

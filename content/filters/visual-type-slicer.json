@@ -1,4 +1,4 @@
-﻿{
+{
     "id":  "builtin.filter.visual-type-slicer",
     "displayName":  "Slicer visuals",
     "targetJsonFileType":  "Visual",
@@ -6,8 +6,9 @@
     "rules":  [
         {
             "operation":  "includes",
-            "key":  "visualType",
+            "key":  "visual.visualType",
             "value":  "Slicer"
         }
     ]
 }
+

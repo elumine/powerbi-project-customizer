@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example visual editor title text",
+  "id": "builtin.macro.example-visual-editor-title-text",
+  "steps": [
+    {
+      "controlId": "general-title-text",
+      "value": "Updated title",
+      "type": "visual-editor-change"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+﻿{
+  "name": "Example format current JSON",
+  "id": "builtin.macro.example-format-json",
+  "steps": [
+    {
+      "type": "format-json"
+    }
+  ]
+}

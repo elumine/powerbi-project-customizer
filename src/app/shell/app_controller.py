@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import os
 from pathlib import Path
@@ -24,6 +24,7 @@ from app.ui.folder_scan_model import FolderScanModel
 from app.ui.history_model import HistoryListModel
 from app.ui.macro_models import MacroListModel
 from app.ui.project_tree_model import ProjectTreeModel
+from app.ui.search_result_model import SearchResultListModel
 from app.ui.suggestion_models import SuggestionListModel
 from app.ui.visual_editor_models import VisualEditorControlModel
 
@@ -62,6 +63,7 @@ class AppController(QObject):
         self._suggestion_values = SuggestionListModel()
         self._macros = MacroListModel()
         self._history_model = HistoryListModel()
+        self._search_results = SearchResultListModel()
         self._visual_editor_controls = VisualEditorControlModel()
 
         file_repository = FileRepository()
@@ -87,6 +89,7 @@ class AppController(QObject):
 
         self._running_macro_index = -1
         self._running_macro_step_index = 0
+        self._macro_recording_start_index = -1
         self._macro_timer = QTimer(self)
         self._macro_timer.setSingleShot(True)
         self._macro_timer.timeout.connect(self._run_next_macro_step)
@@ -106,6 +109,7 @@ class AppController(QObject):
         self._project_tree.countChanged.connect(self.projectTreeChanged.emit)
         self._visual_editor_controls.countChanged.connect(self.visualEditorChanged.emit)
         self._history_model.countChanged.connect(self.historyChanged.emit)
+        self._search_results.countChanged.connect(self.searchChanged.emit)
 
     def get_file_model(self) -> FileListModel:
         return self._files
@@ -140,6 +144,9 @@ class AppController(QObject):
     def get_history_model(self) -> HistoryListModel:
         return self._history_model
 
+    def get_search_result_model(self) -> SearchResultListModel:
+        return self._search_results
+
     def get_folder_scan_count(self) -> int:
         return self.folder_import.count
 
@@ -172,6 +179,9 @@ class AppController(QObject):
 
     def get_any_macro_running(self) -> bool:
         return self.macros.any_running
+
+    def get_is_macro_recording(self) -> bool:
+        return self._macro_recording_start_index >= 0
 
     def get_active_filter_id(self) -> str:
         return self._filters.active_filter_id()
@@ -262,6 +272,12 @@ class AppController(QObject):
     def get_active_match_line(self) -> int:
         return self.search_replace.active_match_line
 
+    def get_active_match_start(self) -> int:
+        return self.search_replace.active_match_start
+
+    def get_active_match_end(self) -> int:
+        return self.search_replace.active_match_end
+
     def get_active_match_display_index(self) -> int:
         return self.search_replace.active_match_display_index
 
@@ -274,6 +290,7 @@ class AppController(QObject):
     def set_search_text(self, text: str) -> None:
         if self.search_replace.set_search_text(text):
             self._refresh_project_tree()
+            self._refresh_search_results()
             self._emit_search_state_changed()
 
     def get_replace_text(self) -> str:
@@ -282,6 +299,7 @@ class AppController(QObject):
     def set_replace_text(self, text: str) -> None:
         if self.search_replace.set_replace_text(text):
             self._refresh_project_tree()
+            self._refresh_search_results()
             self._emit_search_state_changed()
 
     def get_case_sensitive(self) -> bool:
@@ -290,10 +308,14 @@ class AppController(QObject):
     def set_case_sensitive(self, value: bool) -> None:
         if self.search_replace.set_case_sensitive(value):
             self._refresh_project_tree()
+            self._refresh_search_results()
             self._emit_search_state_changed()
 
     def get_total_matches(self) -> int:
         return self.search_replace.total_matches
+
+    def get_search_result_count(self) -> int:
+        return self._search_results.count
 
     def get_status_message(self) -> str:
         return self._status_message
@@ -349,15 +371,15 @@ class AppController(QObject):
     def openFileDialog(self) -> int:
         selected_paths, _selected_filter = QFileDialog.getOpenFileNames(
             None,
-            "Open Power BI JSON files",
+            "Open JSON files",
             "",
-            "Power BI JSON files (page.json visual.json);;JSON files (*.json);;All files (*.*)",
+            "JSON files (*.json);;All files (*.*)",
         )
         return self._add_paths_from_user(PathService.many_from_qml(selected_paths))
 
     @Slot(result=int)
     def openFolderDialog(self) -> int:
-        selected_folder = QFileDialog.getExistingDirectory(None, "Add Power BI report folder")
+        selected_folder = QFileDialog.getExistingDirectory(None, "Add JSON folder")
         if not selected_folder:
             return 0
         return self.scan_folder_paths([Path(selected_folder)])
@@ -457,7 +479,7 @@ class AppController(QObject):
         self._refresh_document_views()
         if replaced > 0:
             self._refresh_suggestions_now()
-            self._record_history_from_snapshots("search-replace-one", "Replace current match", before, {"matches": replaced})
+            self._record_history_from_snapshots("search-replace-one", "Replace current match", before, {"matches": replaced, "search": self.search_replace.search_text, "replace": self.search_replace.replace_text})
         self._set_status(f"Replaced {replaced} match(es).")
         self._emit_document_state_changed()
         return replaced
@@ -469,7 +491,7 @@ class AppController(QObject):
         self._refresh_document_views()
         if replaced > 0:
             self._refresh_suggestions_now()
-            self._record_history_from_snapshots("search-replace-current-file", "Replace current file", before, {"matches": replaced})
+            self._record_history_from_snapshots("search-replace-current-file", "Replace current file", before, {"matches": replaced, "search": self.search_replace.search_text, "replace": self.search_replace.replace_text})
         self._set_status(f"Replaced {replaced} match(es).")
         self._emit_document_state_changed()
         return replaced
@@ -481,7 +503,7 @@ class AppController(QObject):
         self._refresh_document_views()
         if replaced > 0:
             self._refresh_suggestions_now()
-            self._record_history_from_snapshots("search-replace-all", "Replace all", before, {"matches": replaced})
+            self._record_history_from_snapshots("search-replace-all", "Replace all", before, {"matches": replaced, "search": self.search_replace.search_text, "replace": self.search_replace.replace_text})
         self._set_status(f"Replaced {replaced} match(es).")
         self._emit_document_state_changed()
         return replaced
@@ -580,7 +602,7 @@ class AppController(QObject):
         if not self.filters.apply_dynamic_page_name_filter(value, self._files):
             self._set_status("Page name filter needs text.")
             return False
-        self._record_history_event("dynamic-filter-apply", self.filters.active_filter_name, {"value": value})
+        self._record_history_event("dynamic-filter-apply", self.filters.active_filter_name, {"kind": "page-name", "value": value})
         self._refresh_document_views(reapply_filter=False)
         self._set_status(f"Applied {self.filters.active_filter_name}.")
         self._emit_filter_state_changed()
@@ -591,7 +613,18 @@ class AppController(QObject):
         if not self.filters.apply_dynamic_visual_type_filter(value, self._files):
             self._set_status("Visual type filter needs text.")
             return False
-        self._record_history_event("dynamic-filter-apply", self.filters.active_filter_name, {"value": value})
+        self._record_history_event("dynamic-filter-apply", self.filters.active_filter_name, {"kind": "visual-type", "value": value})
+        self._refresh_document_views(reapply_filter=False)
+        self._set_status(f"Applied {self.filters.active_filter_name}.")
+        self._emit_filter_state_changed()
+        return True
+
+    @Slot(str, result=bool)
+    def applyDynamicVisualNameFilter(self, value: str) -> bool:
+        if not self.filters.apply_dynamic_visual_name_filter(value, self._files):
+            self._set_status("Visual name filter needs text.")
+            return False
+        self._record_history_event("dynamic-filter-apply", self.filters.active_filter_name, {"kind": "visual-name", "value": value})
         self._refresh_document_views(reapply_filter=False)
         self._set_status(f"Applied {self.filters.active_filter_name}.")
         self._emit_filter_state_changed()
@@ -801,8 +834,59 @@ class AppController(QObject):
         self.historyChanged.emit()
         self._emit_document_state_changed()
         return True
+    @Slot(result=bool)
+    def startMacroRecording(self) -> bool:
+        if self._macro_recording_start_index >= 0:
+            self._set_status("Macro recording is already active.")
+            return False
+        if self._running_macro_index >= 0 or self.macros.any_running:
+            self._set_status("Stop the running macro before recording.")
+            return False
+        self._macro_recording_start_index = self.history.current_index + 1
+        self._set_status("Started macro recording.")
+        self.macrosChanged.emit()
+        return True
+
+    @Slot(result=bool)
+    def stopMacroRecording(self) -> bool:
+        if self._macro_recording_start_index < 0:
+            self._set_status("Macro recording is not active.")
+            return False
+        start_index = self._macro_recording_start_index
+        end_index = self.history.current_index
+        self._macro_recording_start_index = -1
+        entries = [entry for entry in self.history.entries if start_index <= entry.index <= end_index]
+        if not entries:
+            self._set_status("No actions were recorded.")
+            self.macrosChanged.emit()
+            return False
+        ok, message = self.macros.create_from_history_entries(entries, self._filters.filters())
+        self._set_status(message)
+        self.macrosChanged.emit()
+        return ok
+
+    @Slot(result=bool)
+    def createMacroFromHistory(self) -> bool:
+        return self.stopMacroRecording() if self._macro_recording_start_index >= 0 else self.startMacroRecording()
+
+    @Slot(result=bool)
+    def stopMacro(self) -> bool:
+        if self._running_macro_index < 0 and not self.macros.any_running:
+            self._set_status("No macro is running.")
+            return False
+        self._macro_timer.stop()
+        self._reset_macro_run()
+        self._macro_recording_start_index = -1
+        self.macros.reset_runtime_state()
+        self._set_status("Stopped macro.")
+        self.macrosChanged.emit()
+        return True
+
     @Slot(int, result=bool)
     def runMacro(self, index: int) -> bool:
+        if self._macro_recording_start_index >= 0:
+            self._set_status("Stop macro recording before running a macro.")
+            return False
         if self._running_macro_index >= 0 or self.macros.any_running:
             self._set_status("A macro is already running.")
             return False
@@ -889,6 +973,39 @@ class AppController(QObject):
             return
         if step.type == "replace-all":
             self._set_status(f"Macro replaced {self.replaceAll()} match(es).")
+            return
+        if step.type == "search-replace-one":
+            self.panelRequested.emit("search")
+            self.search_replace.set_search_text(step.search_value)
+            self.search_replace.set_replace_text(step.replace_value)
+            if self.search_replace.active_match_index < 0:
+                self.search_replace.navigate_next()
+            self._set_status(f"Macro replaced {self.replaceCurrentMatch()} match(es).")
+            return
+        if step.type == "search-replace-all":
+            self.panelRequested.emit("search")
+            self.search_replace.set_search_text(step.search_value)
+            self.search_replace.set_replace_text(step.replace_value)
+            self._set_status(f"Macro replaced {self.replaceAll()} match(es).")
+            return
+        if step.type == "dynamic-filter-apply":
+            kind = step.filter_name
+            if kind == "page-name":
+                if not self.applyDynamicPageNameFilter(str(step.value)):
+                    raise ValueError("Page name filter could not be applied.")
+                return
+            if kind == "visual-type":
+                if not self.applyDynamicVisualTypeFilter(str(step.value)):
+                    raise ValueError("Visual type filter could not be applied.")
+                return
+            if kind == "visual-name":
+                if not self.applyDynamicVisualNameFilter(str(step.value)):
+                    raise ValueError("Visual name filter could not be applied.")
+                return
+            raise ValueError(f"Unknown dynamic filter kind '{kind}'.")
+        if step.type == "format-json":
+            if not self.formatCurrentJson():
+                raise ValueError("Current file could not be formatted as JSON.")
             return
         if step.type == "visual-editor-change":
             result = self.visual_editor.apply_change(self._files, step.control_id, step.value)
@@ -991,8 +1108,12 @@ class AppController(QObject):
             self.filters.apply_to_files(self._files)
         self.file_management.ensure_current_index()
         self.search_replace.refresh()
+        self._refresh_search_results()
         self.visual_editor.refresh(self._files)
         self._refresh_project_tree()
+
+    def _refresh_search_results(self) -> None:
+        self._search_results.reset_from_files(self._files)
 
     def _refresh_project_tree(self) -> None:
         self._project_tree.reset_from_files(self._files)
@@ -1100,6 +1221,7 @@ class AppController(QObject):
     macroModel = Property(QObject, get_macro_model, notify=macrosChanged)
     visualEditorControlModel = Property(QObject, get_visual_editor_control_model, notify=visualEditorChanged)
     historyModel = Property(QObject, get_history_model, notify=historyChanged)
+    searchResultModel = Property(QObject, get_search_result_model, notify=searchChanged)
 
     folderScanCount = Property(int, get_folder_scan_count, notify=folderScanChanged)
     folderScanRoot = Property(str, get_folder_scan_root, notify=folderScanChanged)
@@ -1112,6 +1234,7 @@ class AppController(QObject):
     historyCount = Property(int, get_history_count, notify=historyChanged)
     historyCurrentIndex = Property(int, get_history_current_index, notify=historyChanged)
     anyMacroRunning = Property(bool, get_any_macro_running, notify=macrosChanged)
+    macroRecording = Property(bool, get_is_macro_recording, notify=macrosChanged)
     activeFilterId = Property(str, get_active_filter_id, notify=filtersChanged)
     activeFilterName = Property(str, get_active_filter_name, notify=filtersChanged)
     activeFilterColor = Property(str, get_active_filter_color, notify=filtersChanged)
@@ -1144,9 +1267,12 @@ class AppController(QObject):
     replaceText = Property(str, get_replace_text, set_replace_text, notify=searchChanged)
     caseSensitive = Property(bool, get_case_sensitive, set_case_sensitive, notify=searchChanged)
     totalMatches = Property(int, get_total_matches, notify=searchChanged)
+    searchResultCount = Property(int, get_search_result_count, notify=searchChanged)
     activeMatchFileIndex = Property(int, get_active_match_file_index, notify=matchNavigationChanged)
     activeMatchIndex = Property(int, get_active_match_index, notify=matchNavigationChanged)
     activeMatchLine = Property(int, get_active_match_line, notify=matchNavigationChanged)
+    activeMatchStart = Property(int, get_active_match_start, notify=matchNavigationChanged)
+    activeMatchEnd = Property(int, get_active_match_end, notify=matchNavigationChanged)
     activeMatchDisplayIndex = Property(int, get_active_match_display_index, notify=matchNavigationChanged)
     activeMatchFileCount = Property(int, get_active_match_file_count, notify=matchNavigationChanged)
 

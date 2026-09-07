@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example dynamic visual name filter",
+  "id": "builtin.macro.example-dynamic-filter-visual-name",
+  "steps": [
+    {
+      "value": "Sales",
+      "type": "dynamic-filter-apply",
+      "filterName": "visual-name"
+    }
+  ]
+}

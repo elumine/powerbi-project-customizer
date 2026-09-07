@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 
@@ -18,6 +18,8 @@ class SearchController:
         self._active_match_file_index = -1
         self._active_match_index = -1
         self._active_match_line = 0
+        self._active_match_start = -1
+        self._active_match_end = -1
 
     @property
     def search_text(self) -> str:
@@ -46,6 +48,14 @@ class SearchController:
     @property
     def active_match_line(self) -> int:
         return self._active_match_line
+
+    @property
+    def active_match_start(self) -> int:
+        return self._active_match_start
+
+    @property
+    def active_match_end(self) -> int:
+        return self._active_match_end
 
     @property
     def active_match_display_index(self) -> int:
@@ -187,10 +197,15 @@ class SearchController:
             return False
         if not 0 <= match_index < document.match_count:
             return False
+        span = self._service.match_span(document.text, self._query.needle, match_index, self._query.case_sensitive)
+        if span is None:
+            self.refresh()
+            return False
 
         self._active_match_file_index = file_index
         self._active_match_index = match_index
-        self._active_match_line = self._line_for_match_index(document.text, match_index)
+        self._active_match_start, self._active_match_end = span
+        self._active_match_line = document.text.count("\n", 0, self._active_match_start) + 1
         return True
 
     def navigate_next(self) -> bool:
@@ -235,11 +250,15 @@ class SearchController:
         valid_match = document is not None and 0 <= self._active_match_index < document.match_count
         if document is None or not document.is_active or not valid_match:
             self.navigate_next()
+            return
+        self.navigate_to_match(self._active_match_file_index, self._active_match_index)
 
     def _reset_active_match(self) -> None:
         self._active_match_file_index = -1
         self._active_match_index = -1
         self._active_match_line = 0
+        self._active_match_start = -1
+        self._active_match_end = -1
 
     def _line_for_match_index(self, text: str, match_index: int) -> int:
         if self._query.is_empty:

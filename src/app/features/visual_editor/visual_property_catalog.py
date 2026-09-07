@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 from pathlib import Path
@@ -11,16 +11,16 @@ class VisualPropertyCatalog:
     """Loads allowlisted visual editor controls from content files and built-ins."""
 
     BUILTIN_CONTROLS = [
-        VisualEditorControl("general-title-text", "Title text", "General", "text", "powerBiLiteralString"),
-        VisualEditorControl("general-title-font-color", "Title font color", "General", "color", "hexColor"),
-        VisualEditorControl("general-background-color", "Background color", "General", "color", "hexColor"),
-        VisualEditorControl("general-background-transparency", "Background transparency", "General", "slider", "percentage"),
-        VisualEditorControl("general-hidden", "Hidden", "General", "boolean", "boolean"),
-        VisualEditorControl("general-position-x", "X", "General", "number", "number"),
-        VisualEditorControl("general-position-y", "Y", "General", "number", "number"),
-        VisualEditorControl("general-position-width", "Width", "General", "number", "number"),
-        VisualEditorControl("general-position-height", "Height", "General", "number", "number"),
-        VisualEditorControl("general-position-z", "Z", "General", "number", "number"),
+        VisualEditorControl("general-title-text", "Title text", "General", "text", "powerBiLiteralString", paths=[["visual", "visualContainerObjects", "title", 0, "properties", "text", "expr", "Literal", "Value"], ["Title"], ["title"]]),
+        VisualEditorControl("general-title-font-color", "Title font color", "General", "color", "hexColor", paths=[["visual", "visualContainerObjects", "title", 0, "properties", "fontColor", "solid", "color"]]),
+        VisualEditorControl("general-background-color", "Background color", "General", "color", "hexColor", paths=[["visual", "visualContainerObjects", "background", 0, "properties", "color", "solid", "color"]]),
+        VisualEditorControl("general-background-transparency", "Background transparency", "General", "slider", "percentage", paths=[["visual", "visualContainerObjects", "background", 0, "properties", "transparency"]]),
+        VisualEditorControl("general-hidden", "Hidden", "General", "boolean", "boolean", paths=[["isHidden"]]),
+        VisualEditorControl("general-position-x", "X", "General", "number", "number", paths=[["position", "x"]]),
+        VisualEditorControl("general-position-y", "Y", "General", "number", "number", paths=[["position", "y"]]),
+        VisualEditorControl("general-position-width", "Width", "General", "number", "number", paths=[["position", "width"]]),
+        VisualEditorControl("general-position-height", "Height", "General", "number", "number", paths=[["position", "height"]]),
+        VisualEditorControl("general-position-z", "Z", "General", "number", "number", paths=[["position", "z"]]),
         VisualEditorControl("bar-data-color", "Bar color", "Specific", "color", "hexColor", ["bar", "barChart", "clusteredBarChart", "columnChart", "clusteredColumnChart"], paths=[
             ["visual", "objects", "dataPoint", 0, "properties", "fill"],
         ]),
@@ -41,7 +41,7 @@ class VisualPropertyCatalog:
         ]),
         VisualEditorControl("pie-slice-color", "Pie slice color", "Specific", "color", "hexColor", ["pieChart", "donutChart"]),
         VisualEditorControl("line-color", "Line color", "Specific", "color", "hexColor", ["lineChart"]),
-        VisualEditorControl("table-text-size", "Table text size", "Specific", "number", "number", ["table", "pivotTable", "matrix"]),
+        VisualEditorControl("table-text-size", "Table text size", "Specific", "number", "number", ["table", "pivotTable", "matrix"], paths=[["visual", "objects", "values", 0, "properties", "fontSize"], ["visual", "objects", "values", 0, "properties", "textSize"], ["visual", "objects", "columnHeaders", 0, "properties", "fontSize"], ["visual", "objects", "columnHeaders", 0, "properties", "textSize"]]),
         VisualEditorControl("slicer-background-transparency", "Slicer background transparency", "Specific", "slider", "percentage", ["slicer"], paths=[
             ["visual", "visualContainerObjects", "background", 0, "properties", "transparency"],
         ]),
@@ -200,6 +200,8 @@ class VisualPropertyCatalog:
                     options=[str(value) for value in options] if isinstance(options, list) else [],
                     paths=self._normalize_paths(paths),
                     creates_missing_path=bool(item.get("createsMissingPath", False)),
+                    description=str(item.get("description", "")),
+                    group_path=[str(value) for value in item.get("groupPath", [])] if isinstance(item.get("groupPath", []), list) else [],
                 )
             )
         return controls
@@ -228,3 +230,5 @@ class VisualPropertyCatalog:
         for control in controls:
             by_id[control.id] = control
         return list(by_id.values())
+
+

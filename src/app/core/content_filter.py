@@ -155,13 +155,18 @@ class ContentFilterMatcher:
         matches: list[Any] = []
         if isinstance(data, dict):
             for key, value in data.items():
-                if cls._normalize_text(str(key)) == normalized_key:
+                key_text = str(key)
+                if cls._normalize_text(key_text) == normalized_key or cls._normalize_text(cls._flat_leaf_key(key_text)) == normalized_key:
                     matches.append(value)
                 matches.extend(cls._values_for_key(value, normalized_key))
         elif isinstance(data, list):
             for item in data:
                 matches.extend(cls._values_for_key(item, normalized_key))
         return matches
+
+    @staticmethod
+    def _flat_leaf_key(key: str) -> str:
+        return key.rsplit(".", 1)[-1]
 
     @staticmethod
     def _value_to_text(value: Any) -> str:
@@ -202,3 +207,4 @@ class FilterStorage:
         self._path.parent.mkdir(parents=True, exist_ok=True)
         payload = {"filters": [content_filter.to_dict() for content_filter in filters if not content_filter.is_read_only]}
         self._path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+

@@ -17,6 +17,11 @@ class VisualEditorControlModel(QAbstractListModel):
     VISUAL_TYPES_ROLE = ID_ROLE + 6
     MATCHING_COUNT_ROLE = ID_ROLE + 7
     VISUAL_TYPE_GROUP_ROLE = ID_ROLE + 8
+    DESCRIPTION_ROLE = ID_ROLE + 9
+    DEFAULT_VALUE_ROLE = ID_ROLE + 10
+    MATCHES_ROLE = ID_ROLE + 11
+    GROUP_PATH_ROLE = ID_ROLE + 12
+    GROUP_LABEL_ROLE = ID_ROLE + 13
 
     def __init__(self) -> None:
         super().__init__()
@@ -49,6 +54,16 @@ class VisualEditorControlModel(QAbstractListModel):
             return item.matching_count
         if role == self.VISUAL_TYPE_GROUP_ROLE:
             return item.visual_type_group
+        if role == self.DESCRIPTION_ROLE:
+            return item.description
+        if role == self.DEFAULT_VALUE_ROLE:
+            return "" if item.default_value is None else str(item.default_value)
+        if role == self.MATCHES_ROLE:
+            return [match.to_dict() for match in item.matches]
+        if role == self.GROUP_PATH_ROLE:
+            return list(item.group_path)
+        if role == self.GROUP_LABEL_ROLE:
+            return " > ".join(str(part) for part in item.group_path)
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -62,6 +77,11 @@ class VisualEditorControlModel(QAbstractListModel):
             self.VISUAL_TYPES_ROLE: QByteArray(b"visualTypes"),
             self.MATCHING_COUNT_ROLE: QByteArray(b"matchingCount"),
             self.VISUAL_TYPE_GROUP_ROLE: QByteArray(b"visualTypeGroup"),
+            self.DESCRIPTION_ROLE: QByteArray(b"description"),
+            self.DEFAULT_VALUE_ROLE: QByteArray(b"defaultValue"),
+            self.MATCHES_ROLE: QByteArray(b"matches"),
+            self.GROUP_PATH_ROLE: QByteArray(b"groupPath"),
+            self.GROUP_LABEL_ROLE: QByteArray(b"groupLabel"),
         }
 
     @property

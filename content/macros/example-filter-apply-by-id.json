@@ -1,0 +1,10 @@
+﻿{
+  "id": "builtin.macro.example-filter-apply-by-id",
+  "name": "Example filter apply by id",
+  "steps": [
+    {
+      "type": "filter-apply",
+      "filterId": "builtin.filter.visual-type-table"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import json
 import re
@@ -7,8 +7,9 @@ from typing import Any, Iterable
 
 from app.core.file_document import JsonDocument
 from app.core.json_file_type import JsonFileType
-from app.core.powerbi_metadata import encode_powerbi_literal_string
-from app.features.visual_editor.visual_edit_types import VisualEditorControl
+from app.core.powerbi_metadata import decode_powerbi_literal_string, encode_powerbi_literal_string
+from app.features.json_navigation import line_for_json_path
+from app.features.visual_editor.visual_edit_types import VisualEditorControl, VisualEditorPropertyMatch
 
 
 @dataclass(slots=True)
@@ -68,14 +69,21 @@ class VisualEditorService:
             if matching_count <= 0:
                 continue
             group = "All visuals" if control.category == "General" else self._control_group(control)
-            controls.append(replace(control, matching_count=matching_count, visual_type_group=group))
+            controls.append(self._enriched_control(control, scoped_documents, matching_count, group))
 
         self._dynamic_controls = {}
         if include_specific:
             dynamic_documents = scoped_documents if selected_visual_type is not None else active_documents
-            dynamic_controls = self._dynamic_other_controls(dynamic_documents)
-            self._dynamic_controls = {control.id: control for control in dynamic_controls}
-            controls.extend(dynamic_controls)
+            dynamic_controls = self._dynamic_document_controls(dynamic_documents)
+            builtin_paths = {self._flat_key_for_path(path) for control in controls for path in control.paths}
+            enriched_dynamic_controls: list[VisualEditorControl] = []
+            for control in dynamic_controls:
+                if all(self._flat_key_for_path(path) in builtin_paths for path in control.paths):
+                    continue
+                matching_count = control.matching_count or sum(1 for document in dynamic_documents if self._control_matches_document(control, document))
+                enriched_dynamic_controls.append(self._enriched_control(control, dynamic_documents, matching_count, control.visual_type_group or self._control_group(control)))
+            self._dynamic_controls = {control.id: control for control in enriched_dynamic_controls}
+            controls.extend(enriched_dynamic_controls)
         return controls
 
     def visual_type_category_options(self, documents: Iterable[JsonDocument]) -> list[dict[str, Any]]:
@@ -149,9 +157,15 @@ class VisualEditorService:
         return document.visual_type.casefold() == selected_visual_type.casefold()
     def _control_matches_document(self, control: VisualEditorControl, document: JsonDocument) -> bool:
         if "*" in control.visual_types:
-            return True
-        visual_type = document.visual_type.casefold()
-        return any(visual_type == candidate.casefold() or candidate.casefold() in visual_type for candidate in control.visual_types)
+            type_matches = True
+        else:
+            visual_type = document.visual_type.casefold()
+            type_matches = any(visual_type == candidate.casefold() or candidate.casefold() in visual_type for candidate in control.visual_types)
+        if not type_matches:
+            return False
+        if control.paths and isinstance(document.parsed_json, dict):
+            return any(self._path_exists(document.parsed_json, path, control) for path in control.paths)
+        return True
 
     def _control_matches_visual_types(self, control: VisualEditorControl, visual_types: set[str]) -> bool:
         if "*" in control.visual_types:
@@ -177,7 +191,13 @@ class VisualEditorService:
     def _visual_type_from_category(self, category: str) -> str | None:
         if category in {"General", "Specific"}:
             return None
-        return self._category_visual_types.get(category)
+        mapped = self._category_visual_types.get(category)
+        if mapped is not None:
+            return mapped
+        for visual_type in self._supported_specific_visual_types():
+            if self._visual_type_label(visual_type).casefold() == category.casefold():
+                return visual_type
+        return None
 
     def _control_matches_visual_type(self, control: VisualEditorControl, visual_type: str) -> bool:
         if "*" in control.visual_types:
@@ -196,16 +216,13 @@ class VisualEditorService:
         value = re.sub(r"(?<!^)([A-Z])", r" \1", visual_type).replace("_", " ").replace("-", " ")
         value = re.sub(r"\s+", " ", value).strip()
         return value[:1].upper() + value[1:].lower()
-    def _dynamic_other_controls(self, documents: list[JsonDocument]) -> list[VisualEditorControl]:
-        known_specific_types = self._known_specific_visual_types()
+    def _dynamic_document_controls(self, documents: list[JsonDocument]) -> list[VisualEditorControl]:
         controls_by_id: dict[str, VisualEditorControl] = {}
         for document in documents:
             visual_type = document.visual_type or "unknown"
-            if visual_type.casefold() in known_specific_types:
-                continue
             if not isinstance(document.parsed_json, dict):
                 continue
-            for control in self._controls_for_unknown_document(document, visual_type):
+            for control in self._controls_for_document(document, visual_type):
                 existing = controls_by_id.get(control.id)
                 if existing is None:
                     controls_by_id[control.id] = control
@@ -223,14 +240,17 @@ class VisualEditorService:
                     known.add(visual_type.casefold())
         return known
 
-    def _controls_for_unknown_document(self, document: JsonDocument, visual_type: str) -> list[VisualEditorControl]:
+    def _controls_for_document(self, document: JsonDocument, visual_type: str) -> list[VisualEditorControl]:
         data = document.parsed_json
         if not isinstance(data, dict):
             return []
+        discovered = self._controls_for_flat_unknown_document(data, visual_type)
+        if discovered:
+            return discovered
         visual = data.get("visual")
         if not isinstance(visual, dict):
             return []
-        discovered: list[VisualEditorControl] = []
+        discovered = []
         for container_name in ("objects", "visualContainerObjects"):
             container = visual.get(container_name)
             if not isinstance(container, dict):
@@ -261,11 +281,63 @@ class VisualEditorService:
                                 visual_types=[visual_type],
                                 paths=[path],
                                 matching_count=1,
-                                visual_type_group="Other",
+                                visual_type_group=self._visual_type_label(visual_type),
                             )
                         )
         return discovered
 
+    def _controls_for_flat_unknown_document(self, data: dict[str, Any], visual_type: str) -> list[VisualEditorControl]:
+        discovered: list[VisualEditorControl] = []
+        for flat_key, property_value in data.items():
+            path = self._path_from_flat_key(flat_key)
+            property_index = self._properties_index(path)
+            if property_index < 0 or len(path) <= property_index + 1:
+                continue
+            if len(path) < 5 or path[0] != "visual" or path[1] not in {"objects", "visualContainerObjects"}:
+                continue
+            object_name = str(path[2])
+            property_name = str(path[property_index + 1])
+            inferred = self._infer_dynamic_control(property_name, property_value)
+            if inferred is None:
+                continue
+            control_type, value_type = inferred
+            if self._is_flat_literal_value_path(path) and value_type == "string":
+                value_type = "powerBiLiteralString"
+            control_id = self._dynamic_control_id(visual_type, path)
+            label = self._dynamic_control_label(object_name, property_name)
+            discovered.append(
+                VisualEditorControl(
+                    id=control_id,
+                    label=label,
+                    category="Specific",
+                    control=control_type,
+                    value_type=value_type,
+                    visual_types=[visual_type],
+                    paths=[path],
+                    matching_count=1,
+                    visual_type_group=self._visual_type_label(visual_type),
+                )
+            )
+        return discovered
+
+    @staticmethod
+    def _properties_index(path: list[str | int]) -> int:
+        for index, part in enumerate(path):
+            if part == "properties":
+                return index
+        return -1
+
+    @staticmethod
+    def _is_flat_literal_value_path(path: list[str | int]) -> bool:
+        tail = [str(part) for part in path[-3:]]
+        return tail == ["expr", "Literal", "Value"]
+    @staticmethod
+    def _path_from_flat_key(key: str) -> list[str | int]:
+        path: list[str | int] = []
+        for part in str(key).split("."):
+            match = re.fullmatch(r"\[(\d+)\]", part)
+            path.append(int(match.group(1)) if match else part)
+        return path
     @staticmethod
     def _infer_dynamic_control(property_name: str, value: Any) -> tuple[str, str] | None:
         lowered = property_name.casefold()
@@ -303,7 +375,138 @@ class VisualEditorService:
             value = value.replace("_", " ").replace("-", " ")
             return value[:1].upper() + value[1:].lower()
 
-        return f"Other: {title(object_name)} {title(property_name)}"
+        return f"Detected: {title(object_name)} {title(property_name)}"
+
+    def _enriched_control(
+        self,
+        control: VisualEditorControl,
+        documents: list[JsonDocument],
+        matching_count: int,
+        group: str,
+    ) -> VisualEditorControl:
+        matches = self._matches_for_control(control, documents)
+        default_value = matches[0].value if matches else None
+        return replace(
+            control,
+            matching_count=matching_count,
+            visual_type_group=group,
+            description=control.description or self._description_for_control(control),
+            default_value=default_value,
+            matches=matches,
+            group_path=control.group_path or self._group_path_for_control(control),
+        )
+
+    def _matches_for_control(self, control: VisualEditorControl, documents: list[JsonDocument]) -> list[VisualEditorPropertyMatch]:
+        matches: list[VisualEditorPropertyMatch] = []
+        for document in documents:
+            if not self._control_matches_document(control, document):
+                continue
+            if not isinstance(document.parsed_json, dict):
+                continue
+            for path in control.paths:
+                if len(matches) >= 20:
+                    return matches
+                resolved_path = self._resolved_path_for_control(document.parsed_json, path, control)
+                if resolved_path is None:
+                    continue
+                value = self._get_path(document.parsed_json, resolved_path)
+                matches.append(
+                    VisualEditorPropertyMatch(
+                        document_id=document.id,
+                        file_path=document.name,
+                        line=line_for_json_path(document.text, resolved_path),
+                        property_path=self._format_path(resolved_path),
+                        value=self._display_value(value),
+                    )
+                )
+        return matches
+
+    @staticmethod
+    def _description_for_control(control: VisualEditorControl) -> str:
+        if control.paths:
+            return "Controls " + ", ".join(VisualEditorService._format_path(path) for path in control.paths[:2])
+        return f"Controls allowlisted {control.category.casefold()} property '{control.id}'."
+
+    @staticmethod
+    def _group_path_for_control(control: VisualEditorControl) -> list[str]:
+        if not control.paths:
+            return [control.category]
+        path = control.paths[0]
+        if "properties" in path:
+            property_index = path.index("properties")
+            return [str(part) for part in path[:property_index]]
+        return [str(part) for part in path[:-1]]
+
+    @staticmethod
+    def _format_path(path: list[str | int]) -> str:
+        return VisualEditorService._flat_key_for_path(path)
+
+    @staticmethod
+    def _flat_key_for_path(path: list[str | int]) -> str:
+        return ".".join(f"[{part}]" if isinstance(part, int) else str(part) for part in path)
+
+    @staticmethod
+    def _flat_descendant_key(data: dict[str, Any], flat_key: str, control: VisualEditorControl | None = None) -> str | None:
+        prefix = flat_key + "."
+        if control is not None:
+            preferred_suffixes = []
+            if control.value_type in {"powerBiLiteralString", "powerBiLiteralNumber"} or control.control == "text":
+                preferred_suffixes.append("expr.Literal.Value")
+            if control.value_type == "hexColor" or control.control == "color":
+                preferred_suffixes.append("solid.color")
+            for suffix in preferred_suffixes:
+                candidate = prefix + suffix
+                if candidate in data:
+                    return candidate
+        descendants = [key for key in data if key.startswith(prefix)]
+        if len(descendants) == 1:
+            return descendants[0]
+        return None
+
+    @staticmethod
+    def _display_value(value: Any) -> Any:
+        if isinstance(value, dict):
+            literal = value.get("expr", {}).get("Literal")
+            if isinstance(literal, dict) and "Value" in literal:
+                return decode_powerbi_literal_string(literal.get("Value"))
+            solid = value.get("solid")
+            if isinstance(solid, dict) and "color" in solid:
+                return solid.get("color")
+        if isinstance(value, str):
+            return decode_powerbi_literal_string(value)
+        return value
+
+    def _resolved_path_for_control(self, data: Any, path: list[str | int], control: VisualEditorControl | None = None) -> list[str | int] | None:
+        if not isinstance(data, dict):
+            return path if self._path_exists(data, path, control) else None
+        flat_key = self._flat_key_for_path(path)
+        if flat_key in data:
+            return path
+        descendant_key = self._flat_descendant_key(data, flat_key, control)
+        if descendant_key is not None:
+            return self._path_from_flat_key(descendant_key)
+        return None
+
+    @staticmethod
+    def _get_path(data: Any, path: list[str | int]) -> Any:
+        if isinstance(data, dict):
+            flat_key = VisualEditorService._flat_key_for_path(path)
+            if flat_key in data:
+                return data.get(flat_key)
+            descendant_key = VisualEditorService._flat_descendant_key(data, flat_key)
+            if descendant_key is not None:
+                return data.get(descendant_key)
+        current = data
+        for part in path:
+            if isinstance(part, int):
+                if not isinstance(current, list) or not 0 <= part < len(current):
+                    return None
+                current = current[part]
+            else:
+                if not isinstance(current, dict) or part not in current:
+                    return None
+                current = current[part]
+        return current
 
     def _apply_to_data(self, data: Any, control: VisualEditorControl, raw_value: Any) -> int:
         value = self._convert_value(control.value_type, raw_value, control.options)
@@ -379,6 +582,13 @@ class VisualEditorService:
         return 0
 
     def _set_path(self, data: Any, path: list[str | int], value: Any, control: VisualEditorControl | None = None) -> int:
+        if isinstance(data, dict):
+            flat_key = self._flat_key_for_path(path)
+            if flat_key in data:
+                return self._set_leaf_value(data, flat_key, value, path, control)
+            descendant_key = self._flat_descendant_key(data, flat_key, control)
+            if descendant_key is not None:
+                return self._set_leaf_value(data, descendant_key, value, self._path_from_flat_key(descendant_key), control)
         current = data
         for part in path[:-1]:
             if isinstance(part, int):
@@ -431,7 +641,11 @@ class VisualEditorService:
             return "true" if value else "false"
         return encode_powerbi_literal_string(str(value))
 
-    def _path_exists(self, data: Any, path: list[str | int]) -> bool:
+    def _path_exists(self, data: Any, path: list[str | int], control: VisualEditorControl | None = None) -> bool:
+        if isinstance(data, dict):
+            flat_key = self._flat_key_for_path(path)
+            if flat_key in data or self._flat_descendant_key(data, flat_key, control) is not None:
+                return True
         current = data
         for part in path:
             if isinstance(part, int):
@@ -448,7 +662,8 @@ class VisualEditorService:
         changed = 0
         if isinstance(data, dict):
             for current_key, current_value in data.items():
-                if current_key == key and current_value != value:
+                flat_leaf = current_key.rsplit(".", 1)[-1]
+                if (current_key == key or flat_leaf == key) and current_value != value:
                     data[current_key] = value
                     changed += 1
                 else:
@@ -472,12 +687,16 @@ class VisualEditorService:
         if isinstance(data, dict):
             ancestor_match = self._ancestor_match(path, ancestors)
             for current_key, current_value in data.items():
-                if ancestor_match and current_key in keys and not isinstance(current_value, (dict, list)):
+                flat_path = self._flat_path_parts(current_key)
+                effective_path = path + flat_path
+                effective_leaf = flat_path[-1] if flat_path else current_key
+                effective_ancestor_match = ancestor_match or self._ancestor_match(effective_path[:-1], ancestors)
+                if effective_ancestor_match and effective_leaf in keys and not isinstance(current_value, (dict, list)):
                     if data[current_key] != value:
                         data[current_key] = value
                         changed += 1
                 else:
-                    changed += self._walk_and_update(current_value, value, ancestors, keys, path + [current_key])
+                    changed += self._walk_and_update(current_value, value, ancestors, keys, effective_path)
         elif isinstance(data, list):
             for index, item in enumerate(data):
                 changed += self._walk_and_update(item, value, ancestors, keys, path + [str(index)])
@@ -498,6 +717,10 @@ class VisualEditorService:
             for index, item in enumerate(data):
                 changed += self._set_solid_color_by_ancestor(item, value, ancestors, path + [str(index)])
         return changed
+
+    @staticmethod
+    def _flat_path_parts(key: str) -> list[str]:
+        return [part for part in str(key).split(".") if part]
 
     @staticmethod
     def _ancestor_match(path: list[str], ancestors: list[str]) -> bool:

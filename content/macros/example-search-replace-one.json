@@ -1,0 +1,11 @@
+﻿{
+  "name": "Example search replace one",
+  "id": "builtin.macro.example-search-replace-one",
+  "steps": [
+    {
+      "searchValue": "red",
+      "type": "search-replace-one",
+      "replaceValue": "blue"
+    }
+  ]
+}
