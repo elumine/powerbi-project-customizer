@@ -2,6 +2,7 @@
 
 import json
 import random
+import re
 import uuid
 from dataclasses import dataclass, field
 from typing import Any
@@ -10,16 +11,28 @@ from entities.powerbi.file_types import FILTER_TARGET_ALL, FILTER_TARGET_TYPES, 
 
 
 FILTER_OPERATIONS = ("equals", "includes", "notEquals", "notIncludes")
+# Dynamic filter-chip palette. Kept in the entity layer so persisted filters
+# remain framework-independent while matching the dashboard theme variation set.
 FILTER_COLORS = (
-    "#4ec9b0",
-    "#c586c0",
-    "#dcdcaa",
-    "#ce9178",
-    "#9cdcfe",
-    "#b5cea8",
-    "#d7ba7d",
-    "#569cd6",
+    "#42c6b4",
+    "#a78bfa",
+    "#f7b733",
+    "#ff7b72",
+    "#52b6ff",
+    "#ff8f66",
+    "#59d2b6",
+    "#b99aff",
 )
+FILTER_COLOR_FALLBACK = "#52b6ff"
+_HEX_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
+
+
+def normalize_filter_color(value: str, fallback: str = FILTER_COLOR_FALLBACK) -> str:
+    """Accept only safe hex colors before they cross into QML presentation."""
+    candidate = str(value or "").strip()
+    if _HEX_COLOR.fullmatch(candidate):
+        return candidate.lower()
+    return fallback
 
 
 def filter_value_to_text(value: Any) -> str:
@@ -86,7 +99,7 @@ class ContentFilter:
         return cls(
             id=str(uuid.uuid4()),
             display_name=display_name,
-            color=color or generate_filter_color(used_colors or set()),
+            color=normalize_filter_color(color or generate_filter_color(used_colors or set())),
             rules=rules,
             target_json_file_type=normalize_filter_target(target_json_file_type),
         )
@@ -97,7 +110,7 @@ class ContentFilter:
         return cls(
             id=str(data.get("id") or uuid.uuid4()),
             display_name=str(data.get("displayName", "")).strip(),
-            color=str(data.get("color") or generate_filter_color(set())),
+            color=normalize_filter_color(str(data.get("color") or generate_filter_color(set()))),
             rules=rules,
             target_json_file_type=normalize_filter_target(str(data.get("targetJsonFileType", FILTER_TARGET_ALL))),
             source_path=str(data.get("sourcePath", "")),
@@ -118,4 +131,5 @@ def generate_filter_color(used_colors: set[str]) -> str:
     available = [color for color in FILTER_COLORS if color not in used_colors]
     if available:
         return random.choice(available)
-    return f"#{random.randint(0x355070, 0xE0FBFC):06x}"
+    # Reuse a named dashboard chip color rather than emit an arbitrary dark value.
+    return random.choice(FILTER_COLORS)

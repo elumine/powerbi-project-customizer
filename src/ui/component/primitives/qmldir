@@ -7,3 +7,4 @@ MutedLabel 1.0 MutedLabel/MutedLabel.qml
 Field 1.0 Field/Field.qml
 DarkCombo 1.0 DarkCombo/DarkCombo.qml
 DiffChip 1.0 DiffChip/DiffChip.qml
+ColorPickerPopup 1.0 ColorPickerPopup/ColorPickerPopup.qml

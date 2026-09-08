@@ -3,7 +3,7 @@ from __future__ import annotations
 import uuid
 from pathlib import Path
 
-from entities.filter.models import FILTER_OPERATIONS, ContentFilter, FilterRule, generate_filter_color
+from entities.filter.models import FILTER_COLOR_FALLBACK, FILTER_OPERATIONS, ContentFilter, FilterRule, generate_filter_color
 from entities.filter.rules import ContentFilterMatcher
 from entities.powerbi.file_types import FILTER_TARGET_ALL, JsonFileType, normalize_filter_target
 from features.filters.application.scope import FilterScopeService
@@ -271,7 +271,7 @@ class FilterController:
         self._dynamic_filter = ContentFilter(
             id="dynamic." + str(uuid.uuid4()),
             display_name=display_name,
-            color="#569cd6",
+            color=FILTER_COLOR_FALLBACK,
             rules=[FilterRule.create(key=key, operation="includes", value=normalized_value)],
             target_json_file_type=target_json_file_type,
         )

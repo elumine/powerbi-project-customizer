@@ -40,6 +40,7 @@ class ProjectTreeModel(QAbstractListModel):
     ACTIVE_FILTER_COLOR_ROLE = FILE_INDEX_ROLE + 17
     VISUAL_TYPE_ROLE = FILE_INDEX_ROLE + 18
     CONTAINER_ONLY_ROLE = FILE_INDEX_ROLE + 19
+    DOCUMENT_ID_ROLE = FILE_INDEX_ROLE + 20
 
     def __init__(self) -> None:
         super().__init__()
@@ -96,6 +97,8 @@ class ProjectTreeModel(QAbstractListModel):
             return document.visual_type
         if role == self.CONTAINER_ONLY_ROLE:
             return row.container_only
+        if role == self.DOCUMENT_ID_ROLE:
+            return document.id
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -120,6 +123,7 @@ class ProjectTreeModel(QAbstractListModel):
             self.ACTIVE_FILTER_COLOR_ROLE: QByteArray(b"activeFilterColor"),
             self.VISUAL_TYPE_ROLE: QByteArray(b"visualType"),
             self.CONTAINER_ONLY_ROLE: QByteArray(b"containerOnly"),
+            self.DOCUMENT_ID_ROLE: QByteArray(b"documentId"),
         }
 
     @property

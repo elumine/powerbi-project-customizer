@@ -6,6 +6,7 @@ from features.file_management.public import FileListModel, FileManagementControl
 from features.filters.public import FilterController, FilterListModel, ImportedFilterRepository, RuleListModel
 from features.folder_import.public import FolderImportController, FolderScanModel
 from features.history.public import HistoryController, HistoryListModel
+from features.changes.public import ChangesListModel
 from features.macros.public import MacroController, MacroListModel
 from features.search_replace.public import SearchController, SearchResultListModel
 from features.suggestions.public import SuggestionController, SuggestionListModel
@@ -25,6 +26,7 @@ class WorkspaceComponents:
     suggestion_values: SuggestionListModel
     macros_model: MacroListModel
     history_model: HistoryListModel
+    changes_model: ChangesListModel
     search_results: SearchResultListModel
     visual_editor_controls: VisualEditorControlModel
     file_management: FileManagementController

@@ -2,3 +2,5 @@ module ui.styles
 singleton Theme 1.0 Theme.qml
 singleton Typography 1.0 Typography.qml
 singleton Spacing 1.0 Spacing.qml
+singleton Geometry 1.0 Geometry.qml
+singleton Motion 1.0 Motion.qml

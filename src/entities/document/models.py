@@ -8,6 +8,7 @@ from typing import Any
 
 from entities.document.display_name import display_name_from_json_text
 from entities.powerbi.file_types import JsonFileType
+from entities.document.flattening import flatten_json
 from entities.powerbi.metadata import (
     classify_json_file,
     display_name_for_document,
@@ -25,6 +26,11 @@ class JsonDocument:
     text: str
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     original_text: str | None = None
+    # Immutable session baseline used by the Changes panel. ``original_text``
+    # remains the save/dirty baseline and may advance after a save.
+    initial_text: str | None = None
+    # Unmodified file bytes decoded at import time; shown by the raw editor mode.
+    raw_text: str | None = None
     parsed_json: Any | None = None
     json_error: str = ""
     is_active: bool = True
@@ -47,11 +53,48 @@ class JsonDocument:
 
     def __post_init__(self) -> None:
         self.path = Path(self.path).resolve()
+        imported_text = self.text
+        if self.raw_text is None:
+            self.raw_text = imported_text
+        self.text = self._canonical_flat_text(imported_text)
         if self.original_text is None:
             self.original_text = self.text
+        else:
+            self.original_text = self._canonical_flat_text(self.original_text)
+        if self.initial_text is None:
+            self.initial_text = self.text
+        else:
+            self.initial_text = self._canonical_flat_text(self.initial_text)
         self.project_root = self.project_root.resolve() if self.project_root is not None else infer_project_root(self.path)
         self.validate()
         self.refresh_metadata()
+
+    @staticmethod
+    def _canonical_flat_text(text: str) -> str:
+        """Normalize hierarchical JSON at the document boundary.
+
+        ``raw_text`` is retained solely for the read-only preview. Every
+        mutable representation, baseline, filter, search, and macro operation
+        receives the flat key/value document instead.
+        """
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            return text
+        is_flat = isinstance(data, dict) and all(
+            not isinstance(value, (dict, list))
+            or "." in str(key)
+            or "[" in str(key)
+            for key, value in data.items()
+        )
+        is_hierarchical = isinstance(data, list) or (
+            isinstance(data, dict)
+            and not is_flat
+            and any(isinstance(value, (dict, list)) for value in data.values())
+        )
+        if not is_hierarchical:
+            return text
+        return json.dumps(flatten_json(data), ensure_ascii=False, indent=2)
 
     @property
     def file_name(self) -> str:
@@ -70,6 +113,10 @@ class JsonDocument:
         return self.text != self.original_text
 
     @property
+    def has_changes_from_initial(self) -> bool:
+        return self.text != (self.initial_text or "")
+
+    @property
     def is_valid_json(self) -> bool:
         return self.json_error == ""
 
@@ -78,7 +125,7 @@ class JsonDocument:
         return self.file_type.value if isinstance(self.file_type, JsonFileType) else "Json"
 
     def set_text(self, text: str) -> None:
-        self.text = text
+        self.text = self._canonical_flat_text(text)
         self.validate()
         self.refresh_metadata()
 

@@ -76,7 +76,6 @@ class SearchController:
         if value == self._query.needle:
             return False
         self._query.needle = value
-        self.refresh()
         return True
 
     def set_replace_text(self, text: str) -> bool:
@@ -84,7 +83,6 @@ class SearchController:
         if value == self._query.replacement:
             return False
         self._query.replacement = value
-        self.refresh()
         return True
 
     def set_case_sensitive(self, value: bool) -> bool:
@@ -92,8 +90,12 @@ class SearchController:
         if normalized == self._query.case_sensitive:
             return False
         self._query.case_sensitive = normalized
-        self.refresh()
         return True
+
+    def execute_search(self) -> bool:
+        """Run the currently drafted query only when the user explicitly requests it."""
+        self.refresh()
+        return not self._query.is_empty
 
     def refresh(self) -> None:
         self._total_matches = 0

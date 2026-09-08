@@ -13,6 +13,7 @@ from features.file_management.public import FileListModel, FileManagementControl
 from features.filters.public import FilterController, FilterListModel, FilterRepository, ImportedFilterRepository, RuleListModel
 from features.folder_import.public import FolderImportController, FolderScanModel, FolderScanner
 from features.history.public import FileSnapshot, HistoryController, HistoryRecorder, HistoryService
+from features.changes.public import ChangeDiffService, ChangesListModel
 from features.macros.public import MacroController, MacroListModel, MacroRepository, MacroStep, default_macro_step_registry
 from features.search_replace.public import SearchController, SearchResultListModel
 from features.suggestions.public import SuggestionController, SuggestionListModel
@@ -40,8 +41,10 @@ class ShellAdapter(QObject):
     projectTreeChanged = Signal()
     visualEditorChanged = Signal()
     historyChanged = Signal()
+    changesChanged = Signal()
     sessionResetRequested = Signal()
     panelRequested = Signal(str)
+    editorViewRequested = Signal(str)
 
     def __init__(
         self,
@@ -71,6 +74,7 @@ class ShellAdapter(QObject):
         self._suggestion_values = components.suggestion_values
         self._macros = components.macros_model
         self._history_model = components.history_model
+        self._changes_model = components.changes_model
         self._search_results = components.search_results
         self._visual_editor_controls = components.visual_editor_controls
         self.file_management = components.file_management
@@ -84,6 +88,7 @@ class ShellAdapter(QObject):
         self.history = components.history
         self.visual_editor = components.visual_editor
         self._history_recorder = HistoryRecorder()
+        self._diff_service = ChangeDiffService()
         self._workspace_orchestrator = WorkspaceViewOrchestrator(components)
 
         self._running_macro_index = -1
@@ -109,6 +114,7 @@ class ShellAdapter(QObject):
         self._project_tree.countChanged.connect(self.projectTreeChanged.emit)
         self._visual_editor_controls.countChanged.connect(self.visualEditorChanged.emit)
         self._history_model.countChanged.connect(self.historyChanged.emit)
+        self._changes_model.countChanged.connect(self.changesChanged.emit)
         self._search_results.countChanged.connect(self.searchChanged.emit)
 
     def get_file_model(self) -> FileListModel:
@@ -144,6 +150,9 @@ class ShellAdapter(QObject):
     def get_history_model(self) -> HistoryListModel:
         return self._history_model
 
+    def get_changes_model(self) -> ChangesListModel:
+        return self._changes_model
+
     def get_search_result_model(self) -> SearchResultListModel:
         return self._search_results
 
@@ -168,11 +177,28 @@ class ShellAdapter(QObject):
     def get_macro_count(self) -> int:
         return self.macros.count
 
+    def get_macro_search_text(self) -> str:
+        return self.macros.search_text
+
+    @Slot(str)
+    def setMacroSearchText(self, value: str) -> None:
+        self.macros.set_search_text(value)
+        self.macrosChanged.emit()
+
     def get_visual_editor_control_count(self) -> int:
         return self._visual_editor_controls.count
 
     def get_history_count(self) -> int:
         return self.history.count
+
+    def get_change_count(self) -> int:
+        return self._changes_model.count
+
+    def get_current_diff_lines(self):
+        document = self._files.document_at(self.file_management.current_index)
+        if document is None or not document.has_changes_from_initial:
+            return []
+        return self._diff_service.build(document.initial_text or "", document.text)
 
     def get_history_current_index(self) -> int:
         return self.history.current_index
@@ -236,6 +262,9 @@ class ShellAdapter(QObject):
     def get_current_text(self) -> str:
         return self.file_management.current_document_text()
 
+    def get_current_raw_text(self) -> str:
+        return self.file_management.current_document_raw_text()
+
     def get_current_name(self) -> str:
         return self.file_management.current_document_name()
 
@@ -289,27 +318,30 @@ class ShellAdapter(QObject):
 
     def set_search_text(self, text: str) -> None:
         if self.search_replace.set_search_text(text):
-            self._refresh_project_tree()
-            self._refresh_search_results()
-            self._emit_search_state_changed()
+            self.searchChanged.emit()
 
     def get_replace_text(self) -> str:
         return self.search_replace.replace_text
 
     def set_replace_text(self, text: str) -> None:
         if self.search_replace.set_replace_text(text):
-            self._refresh_project_tree()
-            self._refresh_search_results()
-            self._emit_search_state_changed()
+            self.searchChanged.emit()
 
     def get_case_sensitive(self) -> bool:
         return self.search_replace.case_sensitive
 
     def set_case_sensitive(self, value: bool) -> None:
         if self.search_replace.set_case_sensitive(value):
-            self._refresh_project_tree()
-            self._refresh_search_results()
-            self._emit_search_state_changed()
+            self.searchChanged.emit()
+
+    @Slot(result=int)
+    def runSearch(self) -> int:
+        self.search_replace.execute_search()
+        self._refresh_project_tree()
+        self._refresh_search_results()
+        self._emit_search_state_changed()
+        self._set_status(f"Found {self.search_replace.total_matches} match(es).")
+        return self.search_replace.total_matches
 
     def get_total_matches(self) -> int:
         return self.search_replace.total_matches
@@ -382,6 +414,27 @@ class ShellAdapter(QObject):
         if file_index < 0:
             return False
         self.set_current_index(file_index)
+        self.editorViewRequested.emit("text")
+        return True
+
+    @Slot(str, result=bool)
+    def openChanges(self, document_id: str) -> bool:
+        row = self._files.document_index_by_id(document_id)
+        document = self._files.document_at(row)
+        if document is None or not document.has_changes_from_initial:
+            return False
+        self.set_current_index(row)
+        self.editorViewRequested.emit("changes")
+        return True
+
+    @Slot(result=bool)
+    def openCurrentChanges(self) -> bool:
+        document = self._files.document_at(self.file_management.current_index)
+        return self.openChanges(document.id) if document is not None else False
+
+    @Slot(result=bool)
+    def openTextEditor(self) -> bool:
+        self.editorViewRequested.emit("text")
         return True
 
     @Slot(str, bool, result=bool)
@@ -725,6 +778,7 @@ class ShellAdapter(QObject):
             return False
         self.panelRequested.emit("search")
         self.search_replace.set_search_text(value)
+        self.search_replace.execute_search()
         self._refresh_project_tree()
         self._set_status(f"Searching for {value}.")
         self._emit_search_state_changed()
@@ -951,6 +1005,7 @@ class ShellAdapter(QObject):
     def search_macro_step(self, step: MacroStep) -> None:
         self.panelRequested.emit("search")
         self.search_replace.set_search_text(step.search_value)
+        self.search_replace.execute_search()
         self._refresh_project_tree()
         self._set_status(f"Searching for {step.search_value}.")
         self._emit_search_state_changed()
@@ -960,6 +1015,7 @@ class ShellAdapter(QObject):
             self.panelRequested.emit("search")
             self.search_replace.set_search_text(step.search_value)
             self.search_replace.set_replace_text(step.replace_value)
+            self.search_replace.execute_search()
             replaced = self.replaceAll()
         elif step.type == "replace-current":
             replaced = self.replaceCurrentMatch()
@@ -969,6 +1025,7 @@ class ShellAdapter(QObject):
             self.panelRequested.emit("search")
             self.search_replace.set_search_text(step.search_value)
             self.search_replace.set_replace_text(step.replace_value)
+            self.search_replace.execute_search()
             if self.search_replace.active_match_index < 0:
                 self.search_replace.navigate_next()
             replaced = self.replaceCurrentMatch()
@@ -995,9 +1052,9 @@ class ShellAdapter(QObject):
         result = self.visual_editor.apply_change(self._files, step.control_id, step.value)
         self._refresh_document_views()
         self._refresh_suggestions_now()
-        if result.changed_values <= 0:
+        if result.changed_values <= 0 and not step.allow_no_change:
             raise ValueError(result.summary)
-        self._set_status(result.summary)
+        self._set_status("No matching visual values changed; step skipped." if result.changed_values <= 0 else result.summary)
         self.visualEditorChanged.emit()
         self._emit_document_state_changed()
 
@@ -1136,6 +1193,7 @@ class ShellAdapter(QObject):
     macroModel = Property(QObject, get_macro_model, notify=macrosChanged)
     visualEditorControlModel = Property(QObject, get_visual_editor_control_model, notify=visualEditorChanged)
     historyModel = Property(QObject, get_history_model, notify=historyChanged)
+    changesModel = Property(QObject, get_changes_model, notify=changesChanged)
     searchResultModel = Property(QObject, get_search_result_model, notify=searchChanged)
 
     folderScanCount = Property(int, get_folder_scan_count, notify=folderScanChanged)
@@ -1145,8 +1203,11 @@ class ShellAdapter(QObject):
     suggestionKeyCount = Property(int, get_suggestion_key_count, notify=suggestionsChanged)
     suggestionValueCount = Property(int, get_suggestion_value_count, notify=suggestionsChanged)
     macroCount = Property(int, get_macro_count, notify=macrosChanged)
+    macroSearchText = Property(str, get_macro_search_text, notify=macrosChanged)
     visualEditorControlCount = Property(int, get_visual_editor_control_count, notify=visualEditorChanged)
     historyCount = Property(int, get_history_count, notify=historyChanged)
+    changeCount = Property(int, get_change_count, notify=changesChanged)
+    currentDiffLines = Property("QVariantList", get_current_diff_lines, notify=currentDocumentChanged)
     historyCurrentIndex = Property(int, get_history_current_index, notify=historyChanged)
     anyMacroRunning = Property(bool, get_any_macro_running, notify=macrosChanged)
     macroRecording = Property(bool, get_is_macro_recording, notify=macrosChanged)
@@ -1168,6 +1229,7 @@ class ShellAdapter(QObject):
 
     currentIndex = Property(int, get_current_index, set_current_index, notify=currentIndexChanged)
     currentText = Property(str, get_current_text, notify=currentDocumentChanged)
+    currentRawText = Property(str, get_current_raw_text, notify=currentDocumentChanged)
     currentName = Property(str, get_current_name, notify=currentDocumentChanged)
     currentPath = Property(str, get_current_path, notify=currentDocumentChanged)
     currentFileType = Property(str, get_current_file_type, notify=currentDocumentChanged)

@@ -1,0 +1,3 @@
+module features.changes.presentation
+ChangesPanel 1.0 component/ChangesPanel/ChangesPanel.qml
+ChangesView 1.0 component/ChangesView/ChangesView.qml

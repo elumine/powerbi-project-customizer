@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from entities.filter.models import FILTER_OPERATIONS, ContentFilter, FilterRule, filter_value_to_text
+from entities.filter.models import FILTER_OPERATIONS, ContentFilter, FilterRule, filter_value_to_text, normalize_filter_color
 from entities.powerbi.file_types import FILTER_TARGET_ALL, FILTER_TARGET_TYPES, normalize_filter_target
 from services.text.stable_values import stable_color, stable_id
 
@@ -84,7 +84,7 @@ class ImportedFilterRepository:
         if not display_name:
             return None, [f"{path.name}: displayName is required."]
 
-        color = str(data.get("color") or stable_color(f"filter:{filter_id}"))
+        color = normalize_filter_color(str(data.get("color") or stable_color(f"filter:{filter_id}")))
         return (
             ContentFilter(
                 id=filter_id,

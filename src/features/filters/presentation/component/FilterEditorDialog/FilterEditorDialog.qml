@@ -13,9 +13,26 @@ Item {
     id: dialog
     anchors.fill: parent
     required property var app
-    Rectangle { anchors.fill: parent; visible: app.controller.filterEditorVisible; color: style.scrim; z: 30
+    Rectangle {
+        id: overlay
+        anchors.fill: parent
+        property bool open: app.controller.filterEditorVisible
+        visible: opacity > 0
+        color: style.scrim
+        opacity: open ? style.scrimOpacity : 0
+        z: 30
+        Behavior on opacity { NumberAnimation { duration: Motion.standard; easing.type: Easing.OutCubic } }
         MouseArea { anchors.fill: parent }
-        Rectangle { width: Math.min(parent.width - 80, 860); height: Math.min(parent.height - 80, 660); anchors.centerIn: parent; color: app.panelBackground; border.color: app.borderColor; radius: 4
+        Rectangle {
+            width: Math.min(parent.width - Spacing.xxl * 2, 860)
+            height: Math.min(parent.height - Spacing.xxl * 2, 660)
+            anchors.centerIn: parent
+            color: style.dialogBackground
+            border.width: Geometry.borderWidth
+            border.color: Theme.borderColor
+            radius: Geometry.radiusLg
+            scale: overlay.open ? 1.0 : 0.96
+            Behavior on scale { NumberAnimation { duration: Motion.standard; easing.type: Easing.OutBack } }
             ColumnLayout { anchors.fill: parent; anchors.margins: 16; spacing: 12
                 RowLayout {
                     Layout.fillWidth: true
@@ -26,13 +43,13 @@ Item {
                     Field { Layout.fillWidth: true; placeholderText: "Filter name"; text: app.controller.editingFilterName; onTextEdited: app.callController(function(c) { c.editingFilterName = text }) }
                     DarkCombo { Layout.preferredWidth: 130; model: app.filterTargetOptions; currentIndex: Math.max(0, app.filterTargetOptions.indexOf(app.controller.editingFilterTarget)); onActivated: app.callController(function(c) { c.editingFilterTarget = currentText }) }
                     Rectangle { Layout.preferredWidth: 32; Layout.preferredHeight: 32; radius: 3; color: app.controller.editingFilterColor.length > 0 ? app.controller.editingFilterColor : app.accentBlue; border.color: app.borderColor }
-                    Text { text: app.controller.editingFilterColor; color: app.mutedText; font.family: "Consolas"; font.pixelSize: 12; Layout.preferredWidth: 76; elide: Text.ElideRight }
+                    Text { text: app.controller.editingFilterColor; color: app.mutedText; font.family: Typography.dataFamily; font.pixelSize: Typography.bodySize; Layout.preferredWidth: 76; elide: Text.ElideRight }
                     IconButton { text: "R"; ToolTip.visible: hovered; ToolTip.text: "Random color"; onClicked: app.callController(function(c) { c.randomizeEditingFilterColor() }) }
                 }
                 RowLayout {
                     Layout.fillWidth: true
                     PanelTitle { text: "RULES"; Layout.fillWidth: true }
-                    Text { text: app.controller.editingRuleCount + " rule(s)"; color: app.mutedText; font.family: "Segoe UI"; font.pixelSize: 11 }
+                    Text { text: app.controller.editingRuleCount + " rule(s)"; color: app.mutedText; font.family: Typography.uiFamily; font.pixelSize: Typography.captionSize }
                 }
                 Rectangle { Layout.fillWidth: true; Layout.fillHeight: true; color: app.editorBackground; border.color: app.borderColor; radius: 3
                     ListView { id: ruleList; anchors.fill: parent; anchors.margins: 8; clip: true; spacing: 6; model: app.controller.editingRuleModel
@@ -49,10 +66,10 @@ Item {
                     }
                 }
                 RowLayout { Layout.fillWidth: true; spacing: 10
-                    ChromeButton { text: "Add rule"; onClicked: app.callController(function(c) { c.addEditingRule() }) }
+                    ChromeButton { text: "Add rule"; actionType: "save"; onClicked: app.callController(function(c) { c.addEditingRule() }) }
                     MutedLabel { Layout.fillWidth: true; text: app.controller.statusMessage; elide: Text.ElideRight }
-                    ChromeButton { text: "Cancel"; normalColor: "#3c3c3c"; hoverColor: "#4a4a4a"; onClicked: app.callController(function(c) { c.cancelFilterEditor() }) }
-                    ChromeButton { text: "Save"; normalColor: app.accentGreen; hoverColor: app.accentGreenHover; pressedColor: "#126a4d"; enabled: app.controller.editingFilterCanSave; onClicked: app.callController(function(c) { c.saveFilterEditor() }) }
+                    ChromeButton { text: "Cancel"; actionType: "cancel"; onClicked: app.callController(function(c) { c.cancelFilterEditor() }) }
+                    ChromeButton { text: "Save"; actionType: "save"; enabled: app.controller.editingFilterCanSave; onClicked: app.callController(function(c) { c.saveFilterEditor() }) }
                 }
             }
         }

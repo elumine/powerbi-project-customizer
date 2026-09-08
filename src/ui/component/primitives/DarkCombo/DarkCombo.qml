@@ -11,7 +11,7 @@ ComboBox {
     property string textRoleName: "label"
     property string valueRoleName: "value"
 
-    implicitHeight: 32
+    implicitHeight: Geometry.controlHeight
 
     function optionText(option) {
         return typeof option === "object" && option !== null && option[textRoleName] !== undefined
@@ -32,8 +32,8 @@ ComboBox {
     contentItem: Text {
         text: Logic.coalesce(control.optionText(control.currentIndex >= 0 ? control.model[control.currentIndex] : control.displayText), "")
         color: Theme.textColor
-        font.family: "Segoe UI"
-        font.pixelSize: 12
+        font.family: Typography.uiFamily
+        font.pixelSize: Typography.bodySize
         verticalAlignment: Text.AlignVCenter
         leftPadding: 8
         rightPadding: 24
@@ -41,9 +41,11 @@ ComboBox {
     }
 
     background: Rectangle {
-        color: Theme.inputBackground
-        border.color: control.activeFocus ? Theme.statusBackground : Theme.borderColor
-        radius: 2
+        color: control.hovered || control.activeFocus ? style.hoverBackground : style.background
+        border.width: Geometry.borderWidth
+        border.color: control.activeFocus ? style.focusBorder : style.border
+        radius: Geometry.radiusSm
+        Behavior on color { ColorAnimation { duration: Motion.quick; easing.type: Easing.OutCubic } }
     }
 
     delegate: ItemDelegate {
@@ -55,8 +57,8 @@ ComboBox {
         contentItem: Text {
             text: control.optionText(modelData)
             color: Theme.textColor
-            font.family: "Segoe UI"
-            font.pixelSize: 12
+            font.family: Typography.uiFamily
+            font.pixelSize: Typography.bodySize
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
         }

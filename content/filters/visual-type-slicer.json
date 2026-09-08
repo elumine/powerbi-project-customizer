@@ -1,14 +1,13 @@
 {
-    "id":  "builtin.filter.visual-type-slicer",
-    "displayName":  "Slicer visuals",
-    "targetJsonFileType":  "Visual",
-    "color":  "#b5cea8",
-    "rules":  [
-        {
-            "operation":  "includes",
-            "key":  "visual.visualType",
-            "value":  "Slicer"
-        }
-    ]
+  "id": "builtin.filter.visual-type-slicer",
+  "displayName": "Slicer visuals",
+  "targetJsonFileType": "Visual",
+  "color": "#ff8f66",
+  "rules": [
+    {
+      "operation": "includes",
+      "key": "visual.visualType",
+      "value": "Slicer"
+    }
+  ]
 }
-

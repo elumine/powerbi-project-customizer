@@ -9,6 +9,7 @@ from features.file_management.public import FileListModel, FileManagementControl
 from features.filters.public import FilterController, FilterListModel, FilterRepository, FilterScopeService, ImportedFilterRepository, RuleListModel
 from features.folder_import.public import FolderImportController, FolderScanModel, FolderScanner
 from features.history.public import HistoryController, HistoryListModel, HistoryService
+from features.changes.public import ChangesListModel
 from features.macros.public import MacroController, MacroListModel, MacroRepository
 from features.search_replace.public import SearchController, SearchProjectionService, SearchResultListModel
 from features.suggestions.public import SuggestionController, SuggestionListModel
@@ -81,6 +82,7 @@ class DependencyContainer:
         editing_rules = RuleListModel()
         suggestion_keys, suggestion_values = SuggestionListModel(), SuggestionListModel()
         macros_model, history_model = MacroListModel(), HistoryListModel()
+        changes_model = ChangesListModel(documents)
         search_results, visual_editor_controls = SearchResultListModel(), VisualEditorControlModel()
 
         file_management = FileManagementController(files, FileManagementService(documents, FileRepository()))
@@ -107,7 +109,7 @@ class DependencyContainer:
             files=files, project_tree=project_tree, folder_scan=folder_scan,
             filters_model=filters_model, editing_rules=editing_rules,
             suggestion_keys=suggestion_keys, suggestion_values=suggestion_values,
-            macros_model=macros_model, history_model=history_model,
+            macros_model=macros_model, history_model=history_model, changes_model=changes_model,
             search_results=search_results, visual_editor_controls=visual_editor_controls,
             file_management=file_management, folder_import=folder_import, search_replace=search_replace,
             imported_filter_repository=imported_filter_repository, imported_filter_errors=imported.errors,

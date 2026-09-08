@@ -23,8 +23,8 @@ import "StartAgainDialogLogic.js" as Logic
             Item { Layout.fillHeight: true }
             RowLayout { Layout.fillWidth: true; spacing: 10
                 Item { Layout.fillWidth: true }
-                ChromeButton { text: "Cancel"; normalColor: "#3c3c3c"; hoverColor: "#4a4a4a"; onClicked: dialog.close() }
-                ChromeButton { text: "Clear"; normalColor: app.accentRed; hoverColor: "#d65252"; onClicked: { dialog.close(); app.callController(function(c) { c.startAgain() }) } }
+                ChromeButton { text: "Cancel"; actionType: "cancel"; onClicked: dialog.close() }
+                ChromeButton { text: "Clear"; actionType: "cancel"; onClicked: { dialog.close(); app.callController(function(c) { c.startAgain() }) } }
             }
         }
     }

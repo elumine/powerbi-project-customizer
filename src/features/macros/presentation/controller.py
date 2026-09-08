@@ -20,6 +20,13 @@ class MacroController:
         return self._model.count
 
     @property
+    def search_text(self) -> str:
+        return self._model.search_text
+
+    def set_search_text(self, value: str) -> None:
+        self._model.set_search_text(value)
+
+    @property
     def any_running(self) -> bool:
         return any(item.running for item in self._model.items())
 

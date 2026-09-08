@@ -15,10 +15,12 @@ Desktop JSON multi-file editor built with Python, PySide6, QML, and Qt styling. 
 - Create, edit, delete, persist, apply, and deactivate user JSON content filters.
 - Match filters recursively by key with `equals`, `includes`, `notEquals`, and `notIncludes` operations.
 - View duplicate JSON key/value suggestions from loaded valid JSON files and open search from a suggestion.
-- Import and run ordered macros from `content/macros` for filter, search, and search-and-replace workflows.
+- Import and run ordered macros from `content/macros` for filter, search, search-and-replace, and grouped visual-formatting workflows.
+- Apply the bundled `powerbi-standard-visual-formatting.json` macro with six named groups covering all visuals, charts, slicers, bookmark navigators, title textboxes, and cards.
 - Keep invalid JSON visible in the explorer while excluding it from active filtered editing/search.
 - Limit search, replace-all, and single-file replace to active files while a content filter is applied.
 - Save one file or all dirty files.
+- Review files changed since import in a dedicated Changes panel with VS Code-style red/green diffs.
 
 ## Setup
 

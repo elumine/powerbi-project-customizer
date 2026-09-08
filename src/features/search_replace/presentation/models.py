@@ -17,6 +17,10 @@ class SearchResultListModel(QAbstractListModel):
     DISPLAY_TEXT_ROLE = FILE_INDEX_ROLE + 6
     START_ROLE = FILE_INDEX_ROLE + 7
     END_ROLE = FILE_INDEX_ROLE + 8
+    BEFORE_ROLE = FILE_INDEX_ROLE + 9
+    MATCH_ROLE = FILE_INDEX_ROLE + 10
+    AFTER_ROLE = FILE_INDEX_ROLE + 11
+    REPLACEMENT_ROLE = FILE_INDEX_ROLE + 12
 
     def __init__(self) -> None:
         super().__init__()
@@ -49,6 +53,14 @@ class SearchResultListModel(QAbstractListModel):
             return row["start"]
         if role == self.END_ROLE:
             return row["end"]
+        if role == self.BEFORE_ROLE:
+            return row["before"]
+        if role == self.MATCH_ROLE:
+            return row["match"]
+        if role == self.AFTER_ROLE:
+            return row["after"]
+        if role == self.REPLACEMENT_ROLE:
+            return row["replacement"]
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -62,6 +74,10 @@ class SearchResultListModel(QAbstractListModel):
             self.DISPLAY_TEXT_ROLE: QByteArray(b"displayText"),
             self.START_ROLE: QByteArray(b"start"),
             self.END_ROLE: QByteArray(b"end"),
+            self.BEFORE_ROLE: QByteArray(b"before"),
+            self.MATCH_ROLE: QByteArray(b"match"),
+            self.AFTER_ROLE: QByteArray(b"after"),
+            self.REPLACEMENT_ROLE: QByteArray(b"replacement"),
         }
 
     @property
@@ -89,6 +105,10 @@ class SearchResultListModel(QAbstractListModel):
                         "displayText": f"[{file_label}] [{line if line > 0 else '?'}] {text}",
                         "start": int(preview.get("start", 0) or 0),
                         "end": int(preview.get("end", 0) or 0),
+                        "before": str(preview.get("before", "") or ""),
+                        "match": str(preview.get("match", "") or ""),
+                        "after": str(preview.get("after", "") or ""),
+                        "replacement": str(preview.get("replacement", "") or ""),
                     }
                 )
 

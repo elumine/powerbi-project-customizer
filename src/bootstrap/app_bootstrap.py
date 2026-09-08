@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication, QStyleFactory
 
 from bootstrap.dependency_container import ApplicationGraph, DependencyContainer
 from bootstrap.qml_registration import register_qml_types
+from ui.styles.native_styles import build_native_styles
 
 
 ROOT_MODULE_URI = "ui.component.app"
@@ -41,9 +42,7 @@ def create_app(
 
     container = container or DependencyContainer()
     graph = container.build()
-    style_file = graph.resource_locator.ui_style_file()
-    if style_file.exists():
-        app.setStyleSheet(style_file.read_text(encoding="utf-8"))
+    app.setStyleSheet(build_native_styles(graph.theme))
 
     register_qml_types()
     engine = QQmlApplicationEngine()

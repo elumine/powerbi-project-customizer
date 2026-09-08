@@ -25,7 +25,6 @@ class VisualEditorController:
     def category_options(self, files: DocumentWorkspacePort) -> list[dict[str, Any]]:
         return [
             {"label": "General", "value": "General", "enabled": True, "count": self.active_visual_count(files)},
-            {"label": "Specific", "value": "Specific", "enabled": True, "count": self.active_visual_count(files)},
             *self._service.visual_type_category_options(files.documents()),
         ]
 

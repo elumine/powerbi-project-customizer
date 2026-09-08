@@ -9,7 +9,9 @@ a = Analysis(
     ["src/main.py"],
     pathex=["src"],
     binaries=[],
-    datas=[("content", "content")] + ui_resources + feature_qml_resources,
+    # ``Tree`` returns PyInstaller TOC triples, while Analysis(datas=...) only
+    # accepts source/destination pairs. Add the QML trees after Analysis.
+    datas=[("content", "content")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -18,6 +20,7 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+a.datas += ui_resources + feature_qml_resources
 pyz = PYZ(a.pure)
 
 exe = EXE(

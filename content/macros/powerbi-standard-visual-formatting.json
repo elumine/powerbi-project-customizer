@@ -1,0 +1,626 @@
+{
+  "id": "builtin.macro.powerbi-standard-visual-formatting",
+  "name": "Power BI standard visual formatting",
+  "groups": [
+    {
+      "id": "all-visuals",
+      "name": "All visuals",
+      "steps": [
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-title-alignment",
+          "value": "left",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-title-font-size",
+          "value": 10,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-title-font-family",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-title-font-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-background-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-border-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-visual-tooltip-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-visual-tooltip-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-visual-tooltip-title-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-visual-tooltip-value-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-pin-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-filter-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-smart-narrative-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-icon-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-background-color",
+          "value": "#FFFFFF",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-header-border-color",
+          "value": "#FFFFFF",
+          "allowNoChange": true
+        }
+      ]
+    },
+    {
+      "id": "charts",
+      "name": "Graphs, line charts, and bar charts",
+      "steps": [
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-label-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-label-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-label-background-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-show",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-position",
+          "value": "TopLeft",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-title-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-y-axis-title-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bar-y-axis-values-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-values-show",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-gridlines-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-category-gridlines-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-style",
+          "value": "dashed",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-width",
+          "value": 2,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-interpolation",
+          "value": "smooth",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-smooth-type",
+          "value": "monotoneX",
+          "allowNoChange": true
+        }
+      ]
+    },
+    {
+      "id": "slicer",
+      "name": "Slicer",
+      "steps": [
+        {
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-type",
+          "value": "slicer"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-height",
+          "value": 60,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-padding-top",
+          "value": 5,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-padding-right",
+          "value": 5,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-padding-bottom",
+          "value": 5,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-padding-left",
+          "value": 5,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-title-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-header-font-size",
+          "value": 10,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-header-font-family",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-header-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-select-all",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-single-select",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-multi-select-without-control",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-items-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-items-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-items-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-items-background-color",
+          "value": "#FFFFFF",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-dropdown-border-color",
+          "value": "#EAEAEA",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "slicer-select-icon-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "filter-clear"
+        }
+      ]
+    },
+    {
+      "id": "bookmark-navigator",
+      "name": "Bookmark navigator",
+      "steps": [
+        {
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-type",
+          "value": "bookmarkNavigator"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-height",
+          "value": 40,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-padding-top",
+          "value": 0,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-padding-right",
+          "value": 0,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-padding-bottom",
+          "value": 0,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-padding-left",
+          "value": 0,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-background-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-shape",
+          "value": "rectangle",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-corner-radius",
+          "value": 15,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-text-font-size",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-text-font-family",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-text-color",
+          "value": "#697688",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-text-vertical-alignment",
+          "value": "middle",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-text-horizontal-alignment",
+          "value": "middle",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-fill-color",
+          "value": "#D9DDE1",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-border-width",
+          "value": 2,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-default-border-color",
+          "value": "#8F98A6",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-text-font-size",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-text-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-text-color",
+          "value": "#FFFFFF",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-text-vertical-alignment",
+          "value": "middle",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-text-horizontal-alignment",
+          "value": "middle",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-fill-color",
+          "value": "#697688",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-border-width",
+          "value": 2,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bookmark-selected-border-color",
+          "value": "#697688",
+          "allowNoChange": true
+        },
+        {
+          "type": "filter-clear"
+        }
+      ]
+    },
+    {
+      "id": "title-text",
+      "name": "Text visuals with Title in the name",
+      "steps": [
+        {
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-name",
+          "value": "Title"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "textbox-text-font-size",
+          "value": 18,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "textbox-text-font-family",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "textbox-text-color",
+          "value": "#FFFFFF",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "textbox-background-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "filter-clear"
+        }
+      ]
+    },
+    {
+      "id": "card",
+      "name": "Card",
+      "steps": [
+        {
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-type",
+          "value": "cardVisual"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-show",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-position",
+          "value": "Left",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-font-size-standard",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-font-family-standard",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-color-standard",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-position-bottom",
+          "value": "belowValue",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-font-size-standard",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-font-family-standard",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-color-standard",
+          "value": "#697688",
+          "allowNoChange": true
+        },
+        {
+          "type": "filter-clear"
+        }
+      ]
+    }
+  ]
+}

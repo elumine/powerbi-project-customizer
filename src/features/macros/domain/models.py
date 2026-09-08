@@ -32,6 +32,7 @@ class MacroStep:
     has_replace_value: bool = True
     control_id: str = ""
     value: Any = ""
+    allow_no_change: bool = False
     source_history_index: int = -1
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,9 +45,30 @@ class MacroStep:
             "replaceValue": self.replace_value,
             "controlId": self.control_id,
             "value": self.value,
+            "allowNoChange": self.allow_no_change,
             "summary": self.summary,
             "sourceHistoryIndex": self.source_history_index,
         }
+
+    def to_export_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {"type": self.type}
+        if self.filter_name:
+            data["filterName"] = self.filter_name
+        if self.filter_id:
+            data["filterId"] = self.filter_id
+        if self.search_value:
+            data["searchValue"] = self.search_value
+        if self.type in {"search-and-replace", "search-replace", "search-replace-one", "search-replace-all"} or self.replace_value or self.has_replace_value:
+            data["replaceValue"] = self.replace_value
+        if self.control_id:
+            data["controlId"] = self.control_id
+        if self.type in {"visual-editor-change", "dynamic-filter-apply"}:
+            data["value"] = self.value
+        if self.allow_no_change:
+            data["allowNoChange"] = True
+        if self.source_history_index >= 0:
+            data["sourceHistoryIndex"] = self.source_history_index
+        return data
 
     @property
     def summary(self) -> str:
@@ -76,10 +98,38 @@ class MacroStep:
 
 
 @dataclass(slots=True)
+class MacroGroup:
+    """Named, ordered collection of macro steps.
+
+    Groups are presentation metadata; execution still uses the flattened step
+    order exposed by ``MacroItem.steps`` so old macros remain compatible.
+    """
+
+    id: str
+    name: str
+    steps: list[MacroStep] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "steps": [step.to_export_dict() for step in self.steps],
+        }
+
+    def to_view_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "steps": [step.to_dict() for step in self.steps],
+        }
+
+
+@dataclass(slots=True)
 class MacroItem:
     id: str
     name: str
     steps: list[MacroStep] = field(default_factory=list)
+    groups: list[MacroGroup] = field(default_factory=list)
     source_path: str = ""
     load_errors: list[str] = field(default_factory=list)
     validation_errors: list[str] = field(default_factory=list)
@@ -107,22 +157,9 @@ class MacroItem:
         return "Ready"
 
     def to_export_dict(self) -> dict[str, Any]:
-        steps: list[dict[str, Any]] = []
-        for step in self.steps:
-            data: dict[str, Any] = {"type": step.type}
-            if step.filter_name:
-                data["filterName"] = step.filter_name
-            if step.filter_id:
-                data["filterId"] = step.filter_id
-            if step.search_value:
-                data["searchValue"] = step.search_value
-            if step.type in {"search-and-replace", "search-replace", "search-replace-one", "search-replace-all"} or step.replace_value or step.has_replace_value:
-                data["replaceValue"] = step.replace_value
-            if step.control_id:
-                data["controlId"] = step.control_id
-            if step.type in {"visual-editor-change", "dynamic-filter-apply"}:
-                data["value"] = step.value
-            if step.source_history_index >= 0:
-                data["sourceHistoryIndex"] = step.source_history_index
-            steps.append(data)
-        return {"id": self.id, "name": self.name, "steps": steps}
+        result: dict[str, Any] = {"id": self.id, "name": self.name}
+        if self.groups:
+            result["groups"] = [group.to_dict() for group in self.groups]
+        else:
+            result["steps"] = [step.to_export_dict() for step in self.steps]
+        return result

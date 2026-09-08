@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from services.text.stable_values import stable_id
-from features.macros.domain.models import MACRO_STEP_TYPES, MacroItem, MacroStep
+from features.macros.domain.models import MACRO_STEP_TYPES, MacroGroup, MacroItem, MacroStep
 
 
 class MacroRepository:
@@ -48,21 +48,46 @@ class MacroRepository:
 
         macro_id = self._macro_id(path, data)
         name = str(data.get("name") or path.stem).strip()
-        steps_data = data.get("steps")
         load_errors: list[str] = []
         steps: list[MacroStep] = []
-        if not isinstance(steps_data, list):
-            load_errors.append("Macro steps must be an array.")
+        groups: list[MacroGroup] = []
+        groups_data = data.get("groups")
+        if groups_data is not None:
+            if not isinstance(groups_data, list):
+                load_errors.append("Macro groups must be an array.")
+            else:
+                for group_index, group_data in enumerate(groups_data):
+                    if not isinstance(group_data, dict):
+                        load_errors.append(f"Group {group_index + 1}: group must be an object.")
+                        continue
+                    group_name = str(group_data.get("name") or f"Group {group_index + 1}").strip()
+                    group_id = str(group_data.get("id") or f"group-{group_index + 1}").strip()
+                    group_steps_data = group_data.get("steps")
+                    if not isinstance(group_steps_data, list):
+                        load_errors.append(f"Group {group_index + 1}: steps must be an array.")
+                        continue
+                    group_steps: list[MacroStep] = []
+                    for step_data in group_steps_data:
+                        step, errors = self._step_from_data(macro_id, len(steps), step_data)
+                        group_steps.append(step)
+                        steps.append(step)
+                        load_errors.extend(errors)
+                    groups.append(MacroGroup(id=group_id, name=group_name, steps=group_steps))
         else:
-            for index, step_data in enumerate(steps_data):
-                step, errors = self._step_from_data(macro_id, index, step_data)
-                steps.append(step)
-                load_errors.extend(errors)
+            steps_data = data.get("steps")
+            if not isinstance(steps_data, list):
+                load_errors.append("Macro steps must be an array.")
+            else:
+                for index, step_data in enumerate(steps_data):
+                    step, errors = self._step_from_data(macro_id, index, step_data)
+                    steps.append(step)
+                    load_errors.extend(errors)
 
         return MacroItem(
             id=macro_id,
             name=name,
             steps=steps,
+            groups=groups,
             source_path=str(path),
             load_errors=load_errors,
             validation_errors=list(load_errors),
@@ -104,6 +129,7 @@ class MacroRepository:
                 has_replace_value="replaceValue" in data,
                 control_id=str(data.get("controlId", "")).strip(),
                 value=data.get("value", ""),
+                allow_no_change=str(data.get("allowNoChange", "")).strip().casefold() in {"1", "true", "yes", "on"},
                 source_history_index=source_history_index,
             ),
             errors,

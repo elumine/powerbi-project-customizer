@@ -40,6 +40,7 @@ class VisualEditorControl:
     default_value: Any | None = None
     matches: list[VisualEditorPropertyMatch] = field(default_factory=list)
     group_path: list[str] = field(default_factory=list)
+    selector_id: str = ""
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -56,4 +57,5 @@ class VisualEditorControl:
             "defaultValue": self.default_value,
             "matches": [match.to_dict() for match in self.matches],
             "groupPath": list(self.group_path),
+            "selectorId": self.selector_id,
         }

@@ -52,41 +52,32 @@ class VisualEditorService:
         ]
         visual_types = {document.visual_type.casefold() for document in scoped_documents}
         controls: list[VisualEditorControl] = []
-        include_general = category == "General" or selected_visual_type is not None
-        include_specific = category == "Specific" or selected_visual_type is not None
         for control in self._controls.values():
-            if control.category == "General" and not include_general:
+            # All allowlisted controls now live in General. A selected visual type
+            # narrows the same unified list instead of switching to a second mode.
+            if selected_visual_type is not None and not self._control_matches_visual_type(control, selected_visual_type):
                 continue
-            if control.category == "Specific" and not include_specific:
-                continue
-            if control.category not in {"General", "Specific"}:
-                continue
-            if selected_visual_type is not None and control.category == "Specific" and not self._control_matches_visual_type(control, selected_visual_type):
-                continue
-            if category in {"General", "Specific"} and not self._control_matches_visual_types(control, visual_types):
-                continue
-            if selected_visual_type is not None and control.category == "General" and not scoped_documents:
+            if selected_visual_type is None and not self._control_matches_visual_types(control, visual_types):
                 continue
             matching_count = sum(1 for document in scoped_documents if self._control_matches_document(control, document))
             if matching_count <= 0:
                 continue
-            group = "All visuals" if control.category == "General" else self._control_group(control)
+            group = "All visuals" if "*" in control.visual_types else self._control_group(control)
             controls.append(self._enriched_control(control, scoped_documents, matching_count, group))
 
         self._dynamic_controls = {}
-        if include_specific:
-            dynamic_documents = scoped_documents if selected_visual_type is not None else active_documents
-            dynamic_controls = self._dynamic_document_controls(dynamic_documents)
-            builtin_paths = {self._flat_key_for_path(path) for control in controls for path in control.paths}
-            enriched_dynamic_controls: list[VisualEditorControl] = []
-            for control in dynamic_controls:
-                if all(self._flat_key_for_path(path) in builtin_paths for path in control.paths):
-                    continue
-                matching_count = control.matching_count or sum(1 for document in dynamic_documents if self._control_matches_document(control, document))
-                enriched_dynamic_controls.append(self._enriched_control(control, dynamic_documents, matching_count, control.visual_type_group or self._control_group(control)))
-            self._dynamic_controls = {control.id: control for control in enriched_dynamic_controls}
-            controls.extend(enriched_dynamic_controls)
-        return controls
+        dynamic_documents = scoped_documents if selected_visual_type is not None else active_documents
+        dynamic_controls = self._dynamic_document_controls(dynamic_documents)
+        builtin_paths = {self._flat_key_for_path(path) for control in controls for path in control.paths}
+        enriched_dynamic_controls: list[VisualEditorControl] = []
+        for control in dynamic_controls:
+            if all(self._flat_key_for_path(path) in builtin_paths for path in control.paths):
+                continue
+            matching_count = control.matching_count or sum(1 for document in dynamic_documents if self._control_matches_document(control, document))
+            enriched_dynamic_controls.append(self._enriched_control(control, dynamic_documents, matching_count, control.visual_type_group or self._control_group(control)))
+        self._dynamic_controls = {control.id: control for control in enriched_dynamic_controls}
+        controls.extend(enriched_dynamic_controls)
+        return sorted(controls, key=lambda control: (control.visual_type_group.casefold(), control.label.casefold(), control.id))
 
     def visual_type_category_options(self, documents: Iterable[JsonDocument]) -> list[dict[str, Any]]:
         active_counts: dict[str, int] = {}
@@ -169,7 +160,11 @@ class VisualEditorService:
         if not type_matches:
             return False
         if control.paths and isinstance(document.parsed_json, dict):
-            return any(self._path_exists(document.parsed_json, path, control) for path in control.paths)
+            return any(
+                self._path_exists(document.parsed_json, path, control)
+                or (control.creates_missing_path and self._path_can_be_created(document.parsed_json, path))
+                for path in control.paths
+            )
         return True
 
     def _control_matches_visual_types(self, control: VisualEditorControl, visual_types: set[str]) -> bool:
@@ -186,15 +181,13 @@ class VisualEditorService:
     def _supported_specific_visual_types(self) -> set[str]:
         supported: set[str] = set()
         for control in self._controls.values():
-            if control.category != "Specific":
-                continue
             for visual_type in control.visual_types:
                 if visual_type != "*":
                     supported.add(visual_type)
         return supported
 
     def _visual_type_from_category(self, category: str) -> str | None:
-        if category in {"General", "Specific"}:
+        if category == "General":
             return None
         mapped = self._category_visual_types.get(category)
         if mapped is not None:
@@ -238,8 +231,6 @@ class VisualEditorService:
     def _known_specific_visual_types(self) -> set[str]:
         known: set[str] = set()
         for control in self._controls.values():
-            if control.category != "Specific":
-                continue
             for visual_type in control.visual_types:
                 if visual_type != "*":
                     known.add(visual_type.casefold())
@@ -280,7 +271,7 @@ class VisualEditorService:
                             VisualEditorControl(
                                 id=control_id,
                                 label=label,
-                                category="Specific",
+                                category="General",
                                 control=control_type,
                                 value_type=value_type,
                                 visual_types=[visual_type],
@@ -314,7 +305,7 @@ class VisualEditorService:
                 VisualEditorControl(
                     id=control_id,
                     label=label,
-                    category="Specific",
+                    category="General",
                     control=control_type,
                     value_type=value_type,
                     visual_types=[visual_type],
@@ -398,7 +389,7 @@ class VisualEditorService:
             description=control.description or self._description_for_control(control),
             default_value=default_value,
             matches=matches,
-            group_path=control.group_path or self._group_path_for_control(control),
+            group_path=control.group_path or (["All visuals"] if "*" in control.visual_types else self._group_path_for_control(control)),
         )
 
     def _matches_for_control(self, control: VisualEditorControl, documents: list[JsonDocument]) -> list[VisualEditorPropertyMatch]:
@@ -411,19 +402,19 @@ class VisualEditorService:
             for path in control.paths:
                 if len(matches) >= 20:
                     return matches
-                resolved_path = self._resolved_path_for_control(document.parsed_json, path, control)
-                if resolved_path is None:
-                    continue
-                value = self._get_path(document.parsed_json, resolved_path)
-                matches.append(
-                    VisualEditorPropertyMatch(
-                        document_id=document.id,
-                        file_path=document.name,
-                        line=line_for_json_path(document.text, resolved_path),
-                        property_path=self._format_path(resolved_path),
-                        value=self._display_value(value),
+                for resolved_path in self._resolved_paths_for_control(document.parsed_json, path, control):
+                    if len(matches) >= 20:
+                        return matches
+                    value = self._get_path(document.parsed_json, resolved_path)
+                    matches.append(
+                        VisualEditorPropertyMatch(
+                            document_id=document.id,
+                            file_path=document.name,
+                            line=line_for_json_path(document.text, resolved_path),
+                            property_path=self._format_path(resolved_path),
+                            value=self._display_value(value),
+                        )
                     )
-                )
         return matches
 
     @staticmethod
@@ -481,16 +472,74 @@ class VisualEditorService:
             return decode_powerbi_literal_string(value)
         return value
 
+    def _resolved_paths_for_control(
+        self,
+        data: Any,
+        path: list[str | int],
+        control: VisualEditorControl | None = None,
+    ) -> list[list[str | int]]:
+        """Resolve nested paths, including PBIR selector-specific object entries."""
+        if isinstance(data, dict):
+            flat_key = self._flat_key_for_path(path)
+            if flat_key in data:
+                return [path]
+            descendant_key = self._flat_descendant_key(data, flat_key, control)
+            if descendant_key is not None:
+                return [self._path_from_flat_key(descendant_key)]
+
+        resolved: list[list[str | int]] = []
+
+        def walk(current: Any, position: int, actual: list[str | int]) -> None:
+            if position == len(path):
+                resolved.append(self._value_leaf_path(current, actual, control))
+                return
+            part = path[position]
+            if isinstance(current, dict):
+                if isinstance(part, str) and part in current:
+                    walk(current[part], position + 1, actual + [part])
+                return
+            if isinstance(current, list) and isinstance(part, int):
+                indices = self._selector_indices(current, control.selector_id if control else "")
+                for index in indices:
+                    if 0 <= index < len(current):
+                        walk(current[index], position + 1, actual + [index])
+
+        walk(data, 0, [])
+        return resolved
+
+    @staticmethod
+    def _value_leaf_path(current: Any, actual: list[str | int], control: VisualEditorControl | None) -> list[str | int]:
+        """Return the scalar leaf inside a PBIR expression/color wrapper."""
+        if not isinstance(current, dict):
+            return actual
+        literal = current.get("expr", {}).get("Literal") if isinstance(current.get("expr"), dict) else None
+        if isinstance(literal, dict) and "Value" in literal:
+            return actual + ["expr", "Literal", "Value"]
+        solid = current.get("solid")
+        if isinstance(solid, dict) and "color" in solid:
+            return VisualEditorService._value_leaf_path(solid["color"], actual + ["solid", "color"], control)
+        return actual
+
+    @staticmethod
+    def _selector_indices(entries: list[Any], selector_id: str) -> list[int]:
+        if not selector_id:
+            return [0]
+        if selector_id == "non-selected":
+            return [index for index, entry in enumerate(entries) if not (
+                isinstance(entry, dict)
+                and isinstance(entry.get("selector"), dict)
+                and str(entry["selector"].get("id", "")).casefold() == "selected"
+            )]
+        return [
+            index for index, entry in enumerate(entries)
+            if isinstance(entry, dict)
+            and isinstance(entry.get("selector"), dict)
+            and str(entry["selector"].get("id", "")).casefold() == selector_id.casefold()
+        ]
+
     def _resolved_path_for_control(self, data: Any, path: list[str | int], control: VisualEditorControl | None = None) -> list[str | int] | None:
-        if not isinstance(data, dict):
-            return path if self._path_exists(data, path, control) else None
-        flat_key = self._flat_key_for_path(path)
-        if flat_key in data:
-            return path
-        descendant_key = self._flat_descendant_key(data, flat_key, control)
-        if descendant_key is not None:
-            return self._path_from_flat_key(descendant_key)
-        return None
+        paths = self._resolved_paths_for_control(data, path, control)
+        return paths[0] if paths else None
 
     @staticmethod
     def _get_path(data: Any, path: list[str | int]) -> Any:
@@ -548,9 +597,114 @@ class VisualEditorService:
     def _set_existing_paths(self, data: Any, paths: list[list[str | int]], value: Any, control: VisualEditorControl) -> int:
         changed = 0
         for path in paths:
-            if self._path_exists(data, path):
-                changed += self._set_path(data, path, value, control)
+            resolved_paths = self._resolved_paths_for_control(data, path, control)
+            if resolved_paths:
+                for resolved_path in resolved_paths:
+                    changed += self._set_path(data, resolved_path, value, control)
+            elif control.creates_missing_path:
+                changed += self._create_path(data, path, value, control)
         return changed
+
+    def _create_path(self, data: Any, path: list[str | int], value: Any, control: VisualEditorControl) -> int:
+        """Create a missing property in the canonical flat representation."""
+        if not path:
+            return 0
+        if isinstance(data, dict) and self._is_flat_data(data):
+            return self._create_flat_path(data, path, value, control)
+        current = data
+        for position, part in enumerate(path):
+            last = position == len(path) - 1
+            if isinstance(current, dict) and isinstance(part, str):
+                if last:
+                    if part in current:
+                        return 0
+                    current[part] = self._new_property_value(value, control, path)
+                    return 1
+                if part not in current:
+                    current[part] = [] if isinstance(path[position + 1], int) else {}
+                current = current[part]
+                continue
+            if isinstance(current, list) and isinstance(part, int):
+                index = part
+                if control.selector_id and index == 0:
+                    matching = self._selector_indices(current, control.selector_id)
+                    if matching:
+                        index = matching[0]
+                    elif control.selector_id == "non-selected":
+                        current.append({"selector": {"id": "default"}})
+                        index = len(current) - 1
+                    else:
+                        current.append({"selector": {"id": control.selector_id}})
+                        index = len(current) - 1
+                while len(current) <= index:
+                    current.append({})
+                if last:
+                    current[index] = value
+                    return 1
+                current = current[index]
+                continue
+            return 0
+        return 0
+
+    @staticmethod
+    def _is_flat_data(data: dict[str, Any]) -> bool:
+        return all(
+            not isinstance(value, (dict, list))
+            or "." in str(key)
+            or "[" in str(key)
+            for key, value in data.items()
+        )
+
+    def _create_flat_path(self, data: dict[str, Any], path: list[str | int], value: Any, control: VisualEditorControl) -> int:
+        index_position = next((index for index, part in enumerate(path) if isinstance(part, int)), -1)
+        actual_path = list(path)
+        if control.selector_id and index_position >= 0:
+            selector_index = self._flat_selector_index(data, path, index_position, control.selector_id)
+            actual_path[index_position] = selector_index
+            selector_path = self._flat_key_for_path(path[:index_position] + [selector_index, "selector", "id"])
+            data.setdefault(selector_path, "default" if control.selector_id == "non-selected" else control.selector_id)
+
+        key = self._flat_key_for_path(actual_path)
+        if key in data:
+            return 0
+        if "properties" in path and path[-3:] != ["expr", "Literal", "Value"]:
+            if control.value_type == "hexColor":
+                key += ".solid.color.expr.Literal.Value"
+            else:
+                key += ".expr.Literal.Value"
+        data[key] = value if "properties" not in path else (
+            encode_powerbi_literal_string(str(value))
+            if control.value_type == "hexColor" or control.value_type not in {"number", "percentage", "powerBiLiteralNumber", "integer", "boolean"}
+            else self._literal_value(value, control.value_type)
+        )
+        return 1
+
+    def _flat_selector_index(self, data: dict[str, Any], path: list[str | int], index_position: int, selector_id: str) -> int:
+        prefix = self._flat_key_for_path(path[:index_position]) + "."
+        indices: set[int] = set()
+        for key in data:
+            if not key.startswith(prefix + "["):
+                continue
+            match = re.match(re.escape(prefix) + r"\[(\d+)\]", key)
+            if match:
+                indices.add(int(match.group(1)))
+        ordered = sorted(indices)
+        for index in ordered:
+            selector_key = f"{prefix}[{index}].selector.id"
+            selector = decode_powerbi_literal_string(data.get(selector_key, ""))
+            if selector_id == "non-selected" and selector.casefold() != "selected":
+                return index
+            if selector.casefold() == selector_id.casefold():
+                return index
+        return (max(ordered) + 1) if ordered else 0
+
+    @staticmethod
+    def _new_property_value(value: Any, control: VisualEditorControl, path: list[str | int]) -> Any:
+        if "properties" not in path:
+            return value
+        if control.value_type == "hexColor":
+            return {"solid": {"color": {"expr": {"Literal": {"Value": encode_powerbi_literal_string(str(value))}}}}}
+        return {"expr": {"Literal": {"Value": VisualEditorService._literal_value(value, control.value_type)}}}
 
     def _set_first_existing_path(self, data: Any, candidates: list[tuple[list[str | int], Any]]) -> int:
         for path, value in candidates:
@@ -603,6 +757,12 @@ class VisualEditorService:
                 return copied
             solid = copied.get("solid")
             if isinstance(solid, dict) and "color" in solid:
+                color = solid["color"]
+                if isinstance(color, dict):
+                    color_literal = color.get("expr", {}).get("Literal")
+                    if isinstance(color_literal, dict) and "Value" in color_literal:
+                        color_literal["Value"] = encode_powerbi_literal_string(str(value))
+                        return copied
                 solid["color"] = str(value)
                 return copied
             return current_value
@@ -613,10 +773,27 @@ class VisualEditorService:
     @staticmethod
     def _literal_value(value: Any, value_type: str) -> str:
         if value_type in {"number", "percentage", "powerBiLiteralNumber", "integer"}:
-            return str(value)
+            text = str(value)
+            return text if text.upper().endswith("D") else text + "D"
         if value_type == "boolean":
             return "true" if value else "false"
         return encode_powerbi_literal_string(str(value))
+
+    @staticmethod
+    def _path_can_be_created(data: Any, path: list[str | int]) -> bool:
+        """Return true when the path has a usable parent container."""
+        current = data
+        for position, part in enumerate(path[:-1]):
+            if isinstance(current, dict) and isinstance(part, str) and part in current:
+                current = current[part]
+            elif isinstance(current, list) and isinstance(part, int) and 0 <= part < len(current):
+                current = current[part]
+            else:
+                # The first missing key can be created only when its parent is
+                # already a dictionary/list; this also permits creating a
+                # missing PBIR object collection such as accentBar.
+                return isinstance(current, (dict, list)) and position >= 0
+        return isinstance(current, (dict, list))
 
     def _path_exists(self, data: Any, path: list[str | int], control: VisualEditorControl | None = None) -> bool:
         if isinstance(data, dict):

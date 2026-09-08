@@ -51,6 +51,23 @@ class QmlComponentContractTests(unittest.TestCase):
         expected.extend(path / "presentation" / "qmldir" for path in (ROOT / "features").iterdir() if (path / "presentation" / "component").exists())
         self.assertEqual([str(path) for path in expected if not path.exists()], [])
 
+    def test_native_styles_are_generated_from_theme_tokens(self) -> None:
+        bootstrap = (ROOT / "bootstrap" / "app_bootstrap.py").read_text(encoding="utf-8")
+        native_styles = (ROOT / "ui" / "styles" / "native_styles.py").read_text(encoding="utf-8")
+        self.assertIn("build_native_styles(graph.theme)", bootstrap)
+        self.assertIn("theme.action_execute", native_styles)
+        self.assertIn("theme.control_background", native_styles)
+
+    def test_qml_uses_theme_constants_for_visual_colors(self) -> None:
+        literal_pattern = re.compile(r"#[0-9a-fA-F]{6}")
+        violations = [
+            str(path.relative_to(ROOT))
+            for path in ROOT.rglob("*.qml")
+            if path != ROOT / "ui" / "styles" / "Theme.qml"
+            and literal_pattern.search(path.read_text(encoding="utf-8"))
+        ]
+        self.assertEqual(violations, [], f"Visual colors must be declared in Theme.qml: {violations}")
+
     def test_qml_color_declarations_import_qtquick(self) -> None:
         missing = [
             str(path.relative_to(ROOT))
@@ -66,6 +83,30 @@ class QmlComponentContractTests(unittest.TestCase):
         for qml_name, value in qml_values.items():
             snake_name = re.sub(r"(?<!^)([A-Z])", r"_\1", qml_name).lower()
             self.assertEqual(getattr(DEFAULT_THEME, snake_name), value, qml_name)
+
+    def test_required_property_delegates_do_not_depend_on_model_context(self) -> None:
+        panels = [
+            ROOT / "features" / "filters" / "presentation" / "component" / "FilterPanel" / "FilterPanel.qml",
+            ROOT / "features" / "file_management" / "presentation" / "component" / "ProjectExplorerPanel" / "ProjectExplorerPanel.qml",
+        ]
+        for path in panels:
+            markup = path.read_text(encoding="utf-8")
+            self.assertNotIn("model.id", markup, path.name)
+            self.assertNotIn("model.color", markup, path.name)
+
+    def test_dynamic_filter_colors_are_sanitized_at_render_boundaries(self) -> None:
+        paths = [
+            ROOT / "ui" / "component" / "shell" / "AppHeader" / "AppHeader.qml",
+            ROOT / "features" / "filters" / "presentation" / "component" / "FilterPanel" / "FilterPanel.qml",
+            ROOT / "features" / "file_management" / "presentation" / "component" / "ProjectExplorerPanel" / "ProjectExplorerPanel.qml",
+            ROOT / "ui" / "pages" / "FilePickerPage" / "FilePickerPage.qml",
+        ]
+        for path in paths:
+            self.assertIn("Theme.safeColor", path.read_text(encoding="utf-8"), path.name)
+
+    def test_editor_retains_current_file_replace_action(self) -> None:
+        editor = ROOT / "features" / "editor" / "presentation" / "component" / "JsonEditor" / "JsonEditor.qml"
+        self.assertIn("controller.replaceCurrentFile()", editor.read_text(encoding="utf-8"))
 
     def test_visual_editor_category_activation_uses_its_combo_instance(self) -> None:
         panel = ROOT / "features" / "visual_editor" / "presentation" / "component" / "VisualEditorPanel" / "VisualEditorPanel.qml"

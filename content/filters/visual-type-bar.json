@@ -1,14 +1,13 @@
 {
-    "id":  "builtin.filter.visual-type-bar",
-    "displayName":  "Bar visuals",
-    "targetJsonFileType":  "Visual",
-    "color":  "#4ec9b0",
-    "rules":  [
-        {
-            "operation":  "includes",
-            "key":  "visual.visualType",
-            "value":  "Bar"
-        }
-    ]
+  "id": "builtin.filter.visual-type-bar",
+  "displayName": "Bar visuals",
+  "targetJsonFileType": "Visual",
+  "color": "#f7b733",
+  "rules": [
+    {
+      "operation": "includes",
+      "key": "visual.visualType",
+      "value": "Bar"
+    }
+  ]
 }
-

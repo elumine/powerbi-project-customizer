@@ -1,14 +1,13 @@
 {
-    "id":  "builtin.filter.visual-type-chart",
-    "displayName":  "Chart visuals",
-    "targetJsonFileType":  "Visual",
-    "color":  "#ce9178",
-    "rules":  [
-        {
-            "operation":  "includes",
-            "key":  "visual.visualType",
-            "value":  "Chart"
-        }
-    ]
+  "id": "builtin.filter.visual-type-chart",
+  "displayName": "Chart visuals",
+  "targetJsonFileType": "Visual",
+  "color": "#ff8f66",
+  "rules": [
+    {
+      "operation": "includes",
+      "key": "visual.visualType",
+      "value": "Chart"
+    }
+  ]
 }
-

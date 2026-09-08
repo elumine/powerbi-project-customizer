@@ -1,14 +1,13 @@
 {
-    "id":  "builtin.filter.visual-type-line",
-    "displayName":  "Line visuals",
-    "targetJsonFileType":  "Visual",
-    "color":  "#dcdcaa",
-    "rules":  [
-        {
-            "operation":  "includes",
-            "key":  "visual.visualType",
-            "value":  "Line"
-        }
-    ]
+  "id": "builtin.filter.visual-type-line",
+  "displayName": "Line visuals",
+  "targetJsonFileType": "Visual",
+  "color": "#6ea8fe",
+  "rules": [
+    {
+      "operation": "includes",
+      "key": "visual.visualType",
+      "value": "Line"
+    }
+  ]
 }
-

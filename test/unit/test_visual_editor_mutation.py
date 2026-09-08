@@ -35,9 +35,39 @@ class VisualEditorMutationTests(unittest.TestCase):
 
             self.assertEqual(result.changed_files, 1)
             self.assertEqual(result.changed_values, 1)
-            self.assertIn('"title": "After"', document.text)
+            self.assertIn('"visual.title": "After"', document.text)
+            self.assertNotIn('"visual": {', document.text)
             self.assertTrue(document.is_dirty)
             self.assertEqual([change.kind.value for change in changes], ["content_changed"])
+
+    def test_macro_style_creation_stays_flat(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            document = JsonDocument(
+                path=Path(temporary) / "visual.json",
+                text='{"visual.visualType":"barChart","visual.visualContainerObjects.title.[0].properties":{}}',
+            )
+            collection = DocumentCollection([document])
+            service = VisualEditorService([
+                VisualEditorControl(
+                    id="header-filter",
+                    label="Header filter",
+                    category="General",
+                    control="boolean",
+                    value_type="boolean",
+                    visual_types=["*"],
+                    paths=[["visual", "visualContainerObjects", "visualHeader", 0, "properties", "showFilterRestatementButton"]],
+                    creates_missing_path=True,
+                )
+            ])
+
+            result = service.apply_change(collection, "header-filter", False)
+
+            self.assertEqual(1, result.changed_files)
+            self.assertNotIn('"visual": {', document.text)
+            self.assertIn(
+                '"visual.visualContainerObjects.visualHeader.[0].properties.showFilterRestatementButton.expr.Literal.Value": "false"',
+                document.text,
+            )
 
     def test_invalid_or_nonmatching_mutation_leaves_live_document_unchanged(self) -> None:
         with tempfile.TemporaryDirectory() as temporary:

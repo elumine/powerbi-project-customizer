@@ -101,6 +101,10 @@ class FileManagementController:
         document = self._current_document()
         return document.text if document is not None else ""
 
+    def current_document_raw_text(self) -> str:
+        document = self._current_document()
+        return (document.raw_text or "") if document is not None else ""
+
     def current_document_name(self) -> str:
         document = self._current_document()
         return document.name if document is not None else "No file selected"

@@ -12,17 +12,20 @@ class MacroListModel(QAbstractListModel):
     NAME_ROLE = ID_ROLE + 1
     STEP_COUNT_ROLE = ID_ROLE + 2
     STEPS_ROLE = ID_ROLE + 3
-    SOURCE_PATH_ROLE = ID_ROLE + 4
-    VALIDATION_ERRORS_ROLE = ID_ROLE + 5
-    VALIDATION_TEXT_ROLE = ID_ROLE + 6
-    CAN_RUN_ROLE = ID_ROLE + 7
-    RUNNING_ROLE = ID_ROLE + 8
-    STATUS_TEXT_ROLE = ID_ROLE + 9
-    FAILED_STEP_INDEX_ROLE = ID_ROLE + 10
+    GROUPS_ROLE = ID_ROLE + 4
+    SOURCE_PATH_ROLE = ID_ROLE + 5
+    VALIDATION_ERRORS_ROLE = ID_ROLE + 6
+    VALIDATION_TEXT_ROLE = ID_ROLE + 7
+    CAN_RUN_ROLE = ID_ROLE + 8
+    RUNNING_ROLE = ID_ROLE + 9
+    STATUS_TEXT_ROLE = ID_ROLE + 10
+    FAILED_STEP_INDEX_ROLE = ID_ROLE + 11
 
     def __init__(self) -> None:
         super().__init__()
         self._items: list[MacroItem] = []
+        self._all_items: list[MacroItem] = []
+        self._search_text = ""
 
     def rowCount(self, parent: QModelIndex = QModelIndex()) -> int:
         if parent.isValid():
@@ -42,6 +45,8 @@ class MacroListModel(QAbstractListModel):
             return item.step_count
         if role == self.STEPS_ROLE:
             return [step.to_dict() for step in item.steps]
+        if role == self.GROUPS_ROLE:
+            return [group.to_view_dict() for group in item.groups]
         if role == self.SOURCE_PATH_ROLE:
             return item.source_path
         if role == self.VALIDATION_ERRORS_ROLE:
@@ -64,6 +69,7 @@ class MacroListModel(QAbstractListModel):
             self.NAME_ROLE: QByteArray(b"name"),
             self.STEP_COUNT_ROLE: QByteArray(b"stepCount"),
             self.STEPS_ROLE: QByteArray(b"steps"),
+            self.GROUPS_ROLE: QByteArray(b"groups"),
             self.SOURCE_PATH_ROLE: QByteArray(b"sourcePath"),
             self.VALIDATION_ERRORS_ROLE: QByteArray(b"validationErrors"),
             self.VALIDATION_TEXT_ROLE: QByteArray(b"validationText"),
@@ -85,9 +91,26 @@ class MacroListModel(QAbstractListModel):
             return None
         return self._items[row]
 
+    @property
+    def search_text(self) -> str:
+        return self._search_text
+
+    def set_search_text(self, value: str) -> None:
+        normalized = str(value or "").strip()
+        if normalized == self._search_text:
+            return
+        self._search_text = normalized
+        self._apply_filter()
+
     def reset(self, items: list[MacroItem]) -> None:
+        self._all_items = list(items)
+        self._apply_filter()
+
+    def _apply_filter(self) -> None:
+        needle = self._search_text.casefold()
+        filtered = [item for item in self._all_items if not needle or needle in item.name.casefold()]
         self.beginResetModel()
-        self._items = list(items)
+        self._items = filtered
         self.endResetModel()
         self.countChanged.emit()
 

@@ -16,6 +16,8 @@ class FilterListModel(QAbstractListModel):
     SOURCE_PATH_ROLE = ID_ROLE + 5
     READ_ONLY_ROLE = ID_ROLE + 6
     TARGET_FILE_TYPE_ROLE = ID_ROLE + 7
+    FILTER_ID_ROLE = ID_ROLE + 8
+    FILTER_COLOR_ROLE = ID_ROLE + 9
 
     def __init__(self) -> None:
         super().__init__()
@@ -48,6 +50,10 @@ class FilterListModel(QAbstractListModel):
             return content_filter.is_read_only
         if role == self.TARGET_FILE_TYPE_ROLE:
             return content_filter.target_json_file_type
+        if role == self.FILTER_ID_ROLE:
+            return content_filter.id
+        if role == self.FILTER_COLOR_ROLE:
+            return content_filter.color
         return None
 
     def roleNames(self) -> dict[int, QByteArray]:
@@ -60,6 +66,8 @@ class FilterListModel(QAbstractListModel):
             self.SOURCE_PATH_ROLE: QByteArray(b"sourcePath"),
             self.READ_ONLY_ROLE: QByteArray(b"readOnly"),
             self.TARGET_FILE_TYPE_ROLE: QByteArray(b"targetJsonFileType"),
+            self.FILTER_ID_ROLE: QByteArray(b"filterId"),
+            self.FILTER_COLOR_ROLE: QByteArray(b"filterColor"),
         }
 
     @property

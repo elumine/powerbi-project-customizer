@@ -4,9 +4,10 @@ import QtQml
 import QtQuick.Layouts
 import ui.component.primitives 1.0
 import ui.component.shell 1.0
-import "WorkspacePageLogic.js" as Logic
 import ui.styles 1.0
+import "WorkspacePageLogic.js" as Logic
 import features.file_management.presentation 1.0
+import features.changes.presentation 1.0
 import features.search_replace.presentation 1.0
 import features.filters.presentation 1.0
 import features.suggestions.presentation 1.0
@@ -16,38 +17,68 @@ import features.macros.presentation 1.0
 import features.editor.presentation 1.0
 
 Item {
+    id: page
     WorkspacePageStyle { id: style }
+
+    required property var app
     readonly property bool componentReady: Logic.isReady(app)
     enabled: style.enabled && componentReady
-    id: page
-    required property var app
+    opacity: componentReady ? 1.0 : 0.0
 
     function openFind() {
         jsonEditor.openFind()
     }
 
-            RowLayout { anchors.fill: parent; spacing: 0
-                PanelsSidebar { app: page.app }
+    Behavior on opacity { NumberAnimation { duration: Motion.relaxed; easing.type: Easing.OutCubic } }
 
-                Rectangle { Layout.preferredWidth: Math.max(420, Math.min(680, app.width * 0.50)); Layout.fillHeight: true; color: app.panelBackground; border.color: app.borderColor
-                    StackLayout { anchors.fill: parent; anchors.margins: 10; currentIndex: Logic.panelIndex(app.activePanel)
-                        ProjectExplorerPanel { app: page.app }
+    Rectangle {
+        anchors.fill: parent
+        color: style.background
+    }
 
-                        SearchPanel { app: page.app }
+    RowLayout {
+        id: workspaceLayout
+        anchors.fill: parent
+        anchors.margins: Spacing.md
+        spacing: Spacing.md
+        readonly property real contentWidth: Math.max(0, width - spacing * 2)
+        readonly property real panelRatio: Logic.panelWidthRatio(app.activePanel)
 
-                        FilterPanel { app: page.app }
+        PanelsSidebar {
+            app: page.app
+            Layout.preferredWidth: Math.max(style.sidebarMinimumWidth, workspaceLayout.contentWidth * style.sidebarRatio)
+        }
 
-                        SuggestionsPanel { app: page.app }
+        Rectangle {
+            Layout.preferredWidth: Math.max(style.panelMinimumWidth, workspaceLayout.contentWidth * workspaceLayout.panelRatio)
+            Layout.fillHeight: true
+            radius: Geometry.radiusMd
+            color: style.panel
+            border.width: Geometry.borderWidth
+            border.color: Theme.borderSubtle
+            clip: true
 
-                        VisualEditorPanel { app: page.app }
+            StackLayout {
+                anchors.fill: parent
+                anchors.margins: Geometry.cardPadding
+                currentIndex: Logic.panelIndex(app.activePanel)
 
-
-                        HistoryPanel { app: page.app }
-                        MacrosPanel { app: page.app }
-                    }
-                }
-
-                JsonEditor { id: jsonEditor; app: page.app }
+                ProjectExplorerPanel { app: page.app }
+                ChangesPanel { app: page.app }
+                SearchPanel { app: page.app }
+                FilterPanel { app: page.app }
+                SuggestionsPanel { app: page.app }
+                VisualEditorPanel { app: page.app }
+                HistoryPanel { app: page.app }
+                MacrosPanel { app: page.app }
             }
-        
+        }
+
+        JsonEditor {
+            id: jsonEditor
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            app: page.app
+        }
+    }
 }

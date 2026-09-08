@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 
-from services.documents.flattening import flatten_json, flatten_json_text
+from services.documents.flattening import flatten_json, flatten_json_text, unflatten_json, unflatten_json_text
 
 
 class FlatteningContractTests(unittest.TestCase):
@@ -19,6 +19,15 @@ class FlatteningContractTests(unittest.TestCase):
     def test_text_output_is_valid_flat_json(self) -> None:
         output = flatten_json_text('{"visual":{"visualType":"table"}}')
         self.assertEqual(json.loads(output), {"visual.visualType": "table"})
+
+    def test_unflatten_round_trips_nested_objects_and_arrays(self) -> None:
+        source = {"visual": {"visualType": "table", "items": [{"name": "one"}, {"name": "two"}]}}
+        self.assertEqual(unflatten_json(flatten_json(source)), source)
+        self.assertEqual(json.loads(unflatten_json_text(flatten_json_text(json.dumps(source)))), source)
+
+    def test_unflatten_restores_escaped_key_delimiters(self) -> None:
+        source = {"a.b": {"[value]": [{"slash\\key": 3}]}}
+        self.assertEqual(unflatten_json(flatten_json(source)), source)
 
 
 if __name__ == "__main__":
