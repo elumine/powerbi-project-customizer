@@ -5,16 +5,16 @@ from typing import Any
 
 
 MACRO_STEP_TYPES = (
-    "filter",
+    #"filter",
     "filter-apply",
     "filter-clear",
     "search",
-    "search-and-replace",
-    "search-replace",
-    "replace-current",
-    "replace-all",
-    "search-replace-one",
+    #"search-and-replace",
+    #"search-replace",
     "search-replace-all",
+    "search-replace-one",
+    #"replace-current",
+    #"replace-all",
     "dynamic-filter-apply",
     "format-json",
     "visual-editor-change",

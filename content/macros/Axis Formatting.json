@@ -1,0 +1,55 @@
+{
+  "id": "title-fontsize-1",
+  "name": "Axis Formatting",
+  "groups": [
+    {
+      "id": "charts",
+      "name": "Graphs, line charts, and bar charts",
+      "steps": [
+
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-y-axis-title-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "bar-y-axis-values-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "controlId": "bar-category-axis-color",
+          "value": "#44546A",
+          "type": "visual-editor-change"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-values-show",
+          "value": false,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "line-y-axis-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        
+        }
+      ]
+    }
+  ]
+}

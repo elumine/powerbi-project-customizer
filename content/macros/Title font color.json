@@ -1,0 +1,19 @@
+{
+  "id": "builtin.macro.powerbi-standard-visual-formatting-v1",
+  "name": "Title font color",
+  "groups": [
+    {
+      "id": "all-visuals",
+      "name": "All visuals",
+      "steps": [
+
+        {
+          "type": "visual-editor-change",
+          "controlId": "general-title-font-color",
+          "value": "#44546A",
+          "allowNoChange": false
+        }
+      ]
+    }
+  ]
+}

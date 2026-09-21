@@ -331,7 +331,7 @@ VisualPropertyCatalog.BUILTIN_CONTROLS.extend([
                     [["visual", "objects", "legend", 0, "properties", "show"]], group="Charts"),
     _format_control("chart-legend-position", "Legend position", "text", "enum", _CHARTS,
                     [["visual", "objects", "legend", 0, "properties", "position"]],
-                    options=["TopLeft", "TopCenter", "TopRight", "BottomCenter"], group="Charts"),
+                    options=["Top", "Left", "Right", "Bottom", "TopLeft", "TopCenter", "TopRight", "BottomCenter"], group="Charts"),
     _format_control("chart-legend-font-size", "Legend font size", "number", "number", _CHARTS,
                     [["visual", "objects", "legend", 0, "properties", "fontSize"]], group="Charts"),
     _format_control("chart-legend-font-family", "Legend font family", "text", "powerBiLiteralString", _CHARTS,

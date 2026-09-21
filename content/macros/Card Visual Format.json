@@ -1,0 +1,77 @@
+{
+  "id": "title-fontsize-1",
+  "name": "Card Visual Format",
+  "groups": [
+    {
+      "id": "card",
+      "name": "Card",
+      "steps": [
+     {
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-type",
+          "value": "cardVisual"
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-show",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-position",
+          "value": "Left",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-accent-bar-color",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-font-size-standard",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-font-family-standard",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-value-color-standard",
+          "value": "#44546A",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-position-bottom",
+          "value": "belowValue",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-font-size-standard",
+          "value": 13,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-font-family-standard",
+          "value": "Segoe UI Semibold",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "card-label-color-standard",
+          "value": "#697688",
+          "allowNoChange": true
+        }
+      ]
+    }
+  ]
+}

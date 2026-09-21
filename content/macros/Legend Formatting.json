@@ -1,0 +1,42 @@
+{
+  "id": "title-fontsize-1",
+  "name": "Legend Formatting",
+  "groups": [
+    {
+      "id": "all-visuals",
+      "name": "All visuals",
+      "steps": [
+  {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-show",
+          "value": true,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-position",
+          "value": "Top",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-font-size",
+          "value": 8,
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-font-family",
+          "value": "Segoe UI",
+          "allowNoChange": true
+        },
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-title-show",
+          "value": false,
+          "allowNoChange": true
+        }
+      ]
+    }
+  ]
+}

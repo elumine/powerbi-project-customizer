@@ -1011,7 +1011,7 @@ class ShellAdapter(QObject):
         self._emit_search_state_changed()
 
     def replace_macro_step(self, step: MacroStep) -> None:
-        if step.type in {"search-and-replace", "search-replace", "search-replace-all"}:
+        if step.type == "search-replace-all":
             self.panelRequested.emit("search")
             self.search_replace.set_search_text(step.search_value)
             self.search_replace.set_replace_text(step.replace_value)
@@ -1051,7 +1051,7 @@ class ShellAdapter(QObject):
     def visual_editor_macro_step(self, step: MacroStep) -> None:
         result = self.visual_editor.apply_change(self._files, step.control_id, step.value)
         self._refresh_document_views()
-        self._refresh_suggestions_now()
+        # self._refresh_suggestions_now()
         if result.changed_values <= 0 and not step.allow_no_change:
             raise ValueError(result.summary)
         self._set_status("No matching visual values changed; step skipped." if result.changed_values <= 0 else result.summary)

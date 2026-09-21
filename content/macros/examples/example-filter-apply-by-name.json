@@ -1,6 +1,6 @@
 ﻿{
-  "name": "Example filter apply by name",
   "id": "builtin.macro.example-filter-apply-by-name",
+  "name": "Example filter apply by name",
   "steps": [
     {
       "type": "filter-apply",

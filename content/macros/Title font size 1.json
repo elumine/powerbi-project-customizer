@@ -1,0 +1,22 @@
+{
+  "id": "title-fontsize-1",
+  "name": "Title font size 1",
+  "groups": [
+    {
+      "id": "all-visuals",
+      "name": "All visuals",
+      "steps": [
+        {
+          "value": "Title",
+          "type": "dynamic-filter-apply",
+          "filterName": "visual-name"
+        },
+        {
+          "controlId": "general-title-font-size",
+          "value": "14",
+          "type": "visual-editor-change"
+        }
+      ]
+    }
+  ]
+}

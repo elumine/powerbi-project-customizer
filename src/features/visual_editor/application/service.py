@@ -588,7 +588,7 @@ class VisualEditorService:
             return self._set_path(data, ["position", key], value, control)
         if control.id in {"bar-data-color", "pie-slice-color", "line-color"}:
             return self._set_color_by_ancestor(data, value, ["data", "color"], ["color", "fill", "foreground", "backgroundColor"])
-        if control.id == "table-text-size":
+        if control.id == "text-size":
             return self._set_exact_key(data, "fontSize", value) + self._set_exact_key(data, "textSize", value)
         if control.id == "slicer-background-transparency":
             return self._set_key_by_ancestor(data, "transparency", value, ["background", "slicer"])

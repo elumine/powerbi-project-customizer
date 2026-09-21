@@ -1,0 +1,18 @@
+{
+  "id": "builtin.macro.powerbi-standard-visual-formatting-v2",
+  "name": "Legend shift",
+  "groups": [
+    {
+      "id": "all-visuals",
+      "name": "All visuals",
+      "steps": [
+        {
+          "type": "visual-editor-change",
+          "controlId": "chart-legend-position",
+          "value": "Top",
+          "allowNoChange": false
+        }
+      ]
+    }
+  ]
+}
