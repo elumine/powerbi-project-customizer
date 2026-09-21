@@ -50,5 +50,10 @@ class VisualEditorController:
         self.refresh(files)
         return self._last_result
 
+    def reset(self, files: DocumentWorkspacePort) -> None:
+        self._category = "General"
+        self._last_result = VisualEditResult()
+        self.refresh(files)
+
     def _enabled_category_values(self, files: DocumentWorkspacePort) -> set[str]:
         return {str(option["value"]) for option in self.category_options(files) if option.get("enabled", True)}

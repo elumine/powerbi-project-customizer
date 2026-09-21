@@ -85,6 +85,9 @@ class FileManagementController:
     def save_all(self) -> FileSaveResult:
         return self._service.save_all()
 
+    def reload_paths(self, paths: list[Path]) -> FileAddResult:
+        return self._service.reload_paths(paths)
+
     def _document_id_for_selectable_index(self, index: int) -> str:
         document = self._files.document_at(index)
         if document is not None and document.visible_in_tree:

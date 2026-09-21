@@ -9,7 +9,7 @@ from infrastructure.qt.dialog_gateway import QtDialogGateway
 from services.configuration.runtime_paths import RuntimePaths
 from services.documents.collection import DocumentCollection
 
-from features.file_management.public import FileListModel, FileManagementController, FileManagementService, FileRepository, ProjectTreeModel
+from features.file_management.public import FileListModel, FileManagementController, FileManagementService, FileRepository, ImportChangeModel, ImportChangeWatcher, ProjectTreeModel
 from features.filters.public import FilterController, FilterListModel, FilterRepository, ImportedFilterRepository, RuleListModel
 from features.folder_import.public import FolderImportController, FolderScanModel, FolderScanner
 from features.history.public import FileSnapshot, HistoryController, HistoryRecorder, HistoryService
@@ -42,6 +42,7 @@ class ShellAdapter(QObject):
     visualEditorChanged = Signal()
     historyChanged = Signal()
     changesChanged = Signal()
+    externalChangesChanged = Signal()
     sessionResetRequested = Signal()
     panelRequested = Signal(str)
     editorViewRequested = Signal(str)
@@ -77,6 +78,10 @@ class ShellAdapter(QObject):
         self._changes_model = components.changes_model
         self._search_results = components.search_results
         self._visual_editor_controls = components.visual_editor_controls
+        self._import_change_model = ImportChangeModel()
+        self._import_change_watcher = ImportChangeWatcher()
+        self._import_change_watcher.changed.connect(self._on_imported_files_changed)
+        self._import_change_model.countChanged.connect(self.externalChangesChanged.emit)
         self.file_management = components.file_management
         self.folder_import = components.folder_import
         self.search_replace = components.search_replace
@@ -155,6 +160,12 @@ class ShellAdapter(QObject):
 
     def get_search_result_model(self) -> SearchResultListModel:
         return self._search_results
+
+    def get_import_change_model(self) -> ImportChangeModel:
+        return self._import_change_model
+
+    def get_has_external_changes(self) -> bool:
+        return self._import_change_model.count > 0
 
     def get_folder_scan_count(self) -> int:
         return self.folder_import.count
@@ -452,6 +463,7 @@ class ShellAdapter(QObject):
             self._set_status("No file was removed.")
             return False
         self._record_history_event("file-remove", display_name, {"not_reversible": True}, reversible=False)
+        self._sync_import_watcher()
         self._refresh_document_views()
         self._refresh_suggestions_now()
         self._set_status("Removed file.")
@@ -468,6 +480,9 @@ class ShellAdapter(QObject):
         self._set_status("No changes to save." if result.saved == 0 else "Saved file.")
         if result.saved > 0:
             self._record_history_from_snapshots("save-file", self.file_management.current_document_name(), before, {"saved": result.saved})
+            document = self._files.document_at(index)
+            if document is not None:
+                self._import_change_watcher.acknowledge([document.path])
         self.filesChanged.emit()
         self.currentDocumentChanged.emit()
         self._refresh_project_tree()
@@ -476,6 +491,7 @@ class ShellAdapter(QObject):
     @Slot(result=int)
     def saveAll(self) -> int:
         before = self._document_snapshots()
+        dirty_paths = [document.path for document in self._files.documents() if document.is_dirty]
         result = self.file_management.save_all()
         if result.errors:
             self._set_status(f"Saved {result.saved} file(s). First error: {result.errors[0]}")
@@ -485,6 +501,7 @@ class ShellAdapter(QObject):
             self._set_status(f"Saved {result.saved} file(s).")
         if result.saved > 0:
             self._record_history_from_snapshots("save-all", "Save all", before, {"saved": result.saved})
+            self._import_change_watcher.acknowledge(dirty_paths)
         self.filesChanged.emit()
         self.currentDocumentChanged.emit()
         self._refresh_project_tree()
@@ -609,6 +626,7 @@ class ShellAdapter(QObject):
         paths = self.folder_import.confirm()
         self.folderScanChanged.emit()
         result = self.file_management.add_files(paths)
+        self._sync_import_watcher()
         self._refresh_document_views()
         self._refresh_suggestions_now()
         self._set_add_status(result)
@@ -847,12 +865,18 @@ class ShellAdapter(QObject):
         self._reset_macro_run()
         self.macros.reset_runtime_state()
         self.file_management.reset()
+        self._import_change_watcher.clear()
+        self._import_change_model.clear()
         self.folder_import.cancel()
         self.search_replace.reset()
         self.filters.reset_active_filter(self._files)
+        self.filters.cancel_editor()
         self._suggestion_keys.reset([])
         self._suggestion_values.reset([])
-        self.visual_editor.refresh(self._files)
+        self.history.clear()
+        self._macro_recording_start_index = -1
+        self.macros.set_search_text("")
+        self.visual_editor.reset(self._files)
         self._project_tree.clear()
         self._set_status("Ready")
         self.sessionResetRequested.emit()
@@ -867,7 +891,35 @@ class ShellAdapter(QObject):
         self.macrosChanged.emit()
         self.visualEditorChanged.emit()
         self.projectTreeChanged.emit()
+        self.changesChanged.emit()
+        self.historyChanged.emit()
+        self.externalChangesChanged.emit()
         return True
+
+    @Slot(result=int)
+    def reimportChangedFiles(self) -> int:
+        paths = self._import_change_model.paths()
+        if not paths:
+            return 0
+        result = self.file_management.reload_paths(paths)
+        self._import_change_watcher.acknowledge(paths)
+        self._import_change_model.clear()
+        self._sync_import_watcher()
+        self._refresh_document_views()
+        self._refresh_suggestions_now()
+        if result.errors:
+            self._set_status(f"Re-imported {result.added} file(s). First error: {result.errors[0]}")
+        else:
+            self._set_status(f"Re-imported {result.added} changed file(s).")
+        self._emit_document_state_changed()
+        return result.added
+
+    @Slot()
+    def cancelExternalChanges(self) -> None:
+        paths = self._import_change_model.paths()
+        self._import_change_watcher.acknowledge(paths)
+        self._import_change_model.clear()
+        self._set_status("Kept the in-memory versions of externally changed files.")
 
     @Slot(int, result=bool)
     def goToHistoryIndex(self, index: int) -> bool:
@@ -1105,6 +1157,7 @@ class ShellAdapter(QObject):
         if file_paths:
             result = self.file_management.add_files(file_paths)
             added = result.added
+            self._sync_import_watcher()
             self._refresh_document_views()
             self._refresh_suggestions_now()
             self._set_add_status(result)
@@ -1114,6 +1167,14 @@ class ShellAdapter(QObject):
         elif not file_paths:
             self._set_status("No JSON files or folders selected.")
         return added
+
+    def _on_imported_files_changed(self, values: list[str]) -> None:
+        paths = self._import_change_model.paths() + [Path(value) for value in values]
+        self._import_change_model.reset(paths)
+        self._set_status(f"Detected external changes in {self._import_change_model.count} imported file(s).")
+
+    def _sync_import_watcher(self) -> None:
+        self._import_change_watcher.watch_paths([document.path for document in self._files.documents()])
 
     def _refresh_document_views(self, reapply_filter: bool = True) -> None:
         self._workspace_orchestrator.refresh_documents(reapply_filter=reapply_filter)
@@ -1195,6 +1256,7 @@ class ShellAdapter(QObject):
     historyModel = Property(QObject, get_history_model, notify=historyChanged)
     changesModel = Property(QObject, get_changes_model, notify=changesChanged)
     searchResultModel = Property(QObject, get_search_result_model, notify=searchChanged)
+    importChangeModel = Property(QObject, get_import_change_model, notify=externalChangesChanged)
 
     folderScanCount = Property(int, get_folder_scan_count, notify=folderScanChanged)
     folderScanRoot = Property(str, get_folder_scan_root, notify=folderScanChanged)
@@ -1226,6 +1288,7 @@ class ShellAdapter(QObject):
     activeVisualCount = Property(int, get_active_visual_count, notify=visualEditorChanged)
     hasFiles = Property(bool, get_has_files, notify=filesChanged)
     hasDirtyFiles = Property(bool, get_has_dirty_files, notify=filesChanged)
+    externalChangesPending = Property(bool, get_has_external_changes, notify=externalChangesChanged)
 
     currentIndex = Property(int, get_current_index, set_current_index, notify=currentIndexChanged)
     currentText = Property(str, get_current_text, notify=currentDocumentChanged)

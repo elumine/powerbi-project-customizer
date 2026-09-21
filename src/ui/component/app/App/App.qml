@@ -102,6 +102,8 @@ ApplicationWindow {
 
     FolderImportDialog { anchors.fill: parent; app: root }
 
+    ImportedFilesChangedDialog { anchors.fill: parent; app: root }
+
     FilterEditorDialog { anchors.fill: parent; app: root }
 
     StartAgainDialog { id: startAgainDialog; app: root }

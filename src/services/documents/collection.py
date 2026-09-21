@@ -90,6 +90,16 @@ class DocumentCollection:
     def remove_document_by_id(self, document_id: str) -> JsonDocument | None:
         return self.remove_document(self.index_by_id(document_id))
 
+    def replace_document(self, index: int, document: JsonDocument) -> bool:
+        """Replace an imported document while retaining its stable session ID."""
+        current = self.document_at(index)
+        if current is None or current.path != document.path:
+            return False
+        document.id = current.id
+        self._documents[index] = document
+        self._emit(DocumentChange(DocumentChangeKind.CONTENT_CHANGED, document.id, index, document=document))
+        return True
+
     def clear(self) -> None:
         if not self._documents:
             return

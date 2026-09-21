@@ -95,3 +95,22 @@ class FileManagementService:
             result.saved += saved.saved
             result.errors.extend(saved.errors)
         return result
+
+    def reload_paths(self, paths: list[Path]) -> FileAddResult:
+        """Replace changed imported documents with their current disk content."""
+        result = FileAddResult()
+        for path in paths:
+            index = self._documents.index_by_path(path.expanduser().resolve())
+            if index < 0:
+                result.skipped += 1
+                continue
+            try:
+                replacement = self._repository.load_document(path)
+            except (DocumentRepositoryError, ValueError, json.JSONDecodeError) as error:
+                result.errors.append(str(error))
+                continue
+            if self._documents.replace_document(index, replacement):
+                result.added += 1
+            else:
+                result.skipped += 1
+        return result
